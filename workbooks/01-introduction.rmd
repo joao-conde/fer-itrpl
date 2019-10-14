@@ -1,0 +1,73 @@
+
+---
+title: "1 Introduction"
+author: "Damir Pintar"
+date: "23. august 2017"
+output:
+  html_document: default
+---
+
+
+```{r setup, include=FALSE}
+library(tidyverse)
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(results = 'hold')
+```
+
+***
+
+This is the first notebook that follows the coursebook "Programming in R". The notebook is designed as a **RMD (R Markdown)** file and is designed to be opened in the **RStudio** tool.
+
+If you have opened this document in the RStudio tool on the toolbar above this text you can notice the knit button. Try to press it - you should as a result get an HTML version of the workbook that you can read with the help of a regular web browser.
+
+The notebook follows the examples and exercises that are handled in a specific lesson. The example you see in the tutorial can be seen below:
+
+### Example - a few simple commands of the R programming language
+
+```{r}
+3+2         # addition
+log(10)    # natural logarithm!
+log10(10)   # base-10 logarithm! 
+sin(0.5 * pi)      # pi is one of the R constants
+```
+
+Try to execute each command separately (using the `CTRL + ENTER` key combination) or all at once (`SHIFT + ENTER`). You will see the results below the R block (if you do not see them, check if you have the option  *Chunk Output inline* turned on. Note that all the commands inside such "R Chunks" RStudio will automatically execute when converting this file to an HTML document.
+
+Now solve the following exercise.
+
+### Task 1.1 - Checking and editing commands
+
+```{r}
+# run the following commands by removing the comment character
+
+getwd () # folder in which we are currently working
+setwd (".") # here we can specify a new working folder if desired
+
+```
+
+While `=` in other programming languages is usually a default assignment operator, the operator `<-` is preferred in R. In he next exercise assign the value `5` to the variable `x`, and print this variable (with the` print` function or just by putting the variable name). Make sure you do not use the left single quotes you see in this paragraph in the program code - they are only for the purpose of generating HTML text versions of the document as part of the script. 
+
+
+### Exercise 1.2 - The assignment operator
+
+```{r}
+# put `5` in the variable` x`
+x <- 5
+# then print the variable `x` on the screen
+x
+```
+
+This is the end of a workbook, but you can freely use it to experiment with RMD files and RStudio. Some things you can try are:
+
+- creating a new block with the `CTRL + ALT + I` key combination or choosing * Insert -> R *
+- trying out different options in the setup menu (small wheel next to the Knit button)
+- etc.
+
+```{r}
+print("Hello world, R")
+
+getwd () # folder in which we are currently working
+setwd ("~") # here we can specify a new working folder if desired
+getwd()
+```
+
