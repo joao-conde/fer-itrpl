@@ -1,0 +1,321 @@
+
+---
+title: "2 Basic data types and operators"
+author: "student"
+date: "23. kolovoz 2017"
+output:
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(results = 'hold')
+```
+
+***
+
+## Osnovni tipovi podataka 
+
+## Basic data types
+
+R offers six basic data types:
+
+tip  | primjeri
+-----|--------------------------
+*logical* |            `TRUE`, `FALSE` ili `T`, `F`
+ *integer* |       `2L`, `5L`, `123456789L`
+*double* |              `4`, `6`, `3.14`, `2e5`
+ *complex* |       `5 + 2i`, `7 + 1i`
+*character* |       `"A"`, `"B"`, `"Pero"`, `"ABCDEFGHijklmnoPQRSTUVwyz"`
+*raw* |                `as.raw(2)`, `charToRaw("1")`
+
+
+
+Checking whether a variable is of a certain type can work with the `is.<type_name>` function. We will try this in the next exercise. Before we begin with solving, we introduce one new feature: in exercises where we print more things on the screen, it is useful to visually separate the different print segments so that we can easily understand which part of the code is referenced. For this purpose, we will use the `cat("-----------\n")` command that simply prints a dash of the line and goes to the new line. We could also use the `print()` function, but it always starts printing with the element index while the `cat` command is a "raw" print, which in this case is more appropriate.
+
+
+```{r}
+x <- 5
+is.numeric(x)
+```
+
+
+***
+
+### Exercise 2.1 - checking data types
+
+
+```{r}
+#try the following commands:
+#is.logical(FALSE)
+#is.integer(2L)
+#is.double(1.11)
+
+# perform the following checks:
+
+# is 5L numeric?
+# is 3.14 numeric?
+# is "ABC" character?
+# is 4 + 2i complex?
+# is 5 integer?
+
+```
+
+***
+
+
+Types of some variables or constants we can retrieve with the `typeof` or` class` function. The difference between them is the following:
+
+* `typeof` - fetches" primitive" or "basic" type ( `integer`, `double`)
+* `class` - 'object type', actually the value of `class` attribute
+
+
+***
+
+### Exercise 2.2 - data type retrieval
+
+
+```{r}
+# print the types of the following constants: TRUE, 2L, F, 3.14, "ABC"
+
+# print the classes of the same constants. Are there any differences?
+```
+
+
+***
+
+## Conversion of data types
+
+Data can be explicitly converted from one type to another using the function `as.<type_name>`.
+
+```{r}
+x <- as.numeric(TRUE)
+x
+```
+
+***
+
+### Exercise 2.3 - conversion of data types
+ 
+```{r}
+# perform the following conversions and print the result
+
+#  2.35 to integer
+#  TRUE to ntomeric
+#  100L to character
+#  2.35 to character
+#  2e2  to character
+#  0 to logical
+#  2.75  to logical
+
+```
+
+***
+
+## Implicit conversion
+
+*R* will implement implicit conversion if possible:
+
+```{r}
+x <- 5 + TRUE
+x
+```
+
+***
+
+
+### Exercise 2.4 - implicit conversion
+
+```{r}
+
+# Write the following phrases and print the results:
+
+# arithmetic operator between logical and numeric variables
+# arithmetic operator between integer and numeric variables
+# logical operator negation (!) applied to numeric variable
+
+```
+
+***
+
+
+## Operators
+
+As in other programming languages, R permits the use of operators in terms. Some of the more frequently used operators are:
+
+- *arithmetic* `+`, `-`, `*`, `/`, `**`, `%%` (modulo), `%/%`
+- *comparison* `<`, `<=`, `>`, `> =`, `==`, `!=`
+- *logical*    `!` (negation), `&&` (scalar AND), `||` (scalar OR), `&` (vector AND), `|` (vector OR)
+- *assignment* `<-` or` = `
+
+
+***
+
+
+### Exercise 2.5 - operators
+
+```{r}
+# try the `5 / 2` and` 5%/% 2` expressions
+
+# check how much "square of 17" and "the remainder of 101 divided by 12" are
+
+# check what is the result of the following expressions: `17 > 13`,`!TRUE`, `5 && 0`,`0. || 2`
+```
+
+***
+
+
+
+Logical values and comparison operators will most commonly be used with so-called "Conditional Execution of Commands", known from other programming languages as the "*IF ELSE*" commands. In R, its syntax looks like this:
+
+`if (expression) {block} else {block}`
+
+***
+
+
+### Exercise 2.6 - conditional execution
+
+```{r}
+# Write a command that performs the following:
+# "if 100 is an even number print 'Success!'"
+```
+
+
+When assigning, we keep in mind that on the left there is so-called "left value" (*lvalue*). This is interpreted in the programmer's sense as "something in which the calculated value can be stored".
+
+```{r, eval = F}
+x + 1 <- 2 # error !!!]
+```
+
+
+As a rule, in R as *lvalue * we can most commonly see a variable, though sometimes there may be a  function call. This perhaps initially confusing feature will be clarified later.
+
+***
+
+## Variable names
+
+
+```{r, eval = F}
+.myVarijable <- 5 #OK
+my.Variable <- 5 #OK
+_myVariable <- 5 # not OK
+123Variable <- 5 # not OK
+
+```
+
+
+In practice for complex name variables we need to select one of the following conventions:
+
+```{r, eval = F}
+myVariable <- 1 #  camelcase
+my_Variable <- 2 # underscore seperation or
+my.variable <- 3 # point separation
+
+```
+
+It is important that we do not mix conventions in a program code, ie, after the selection, be consistent.
+
+
+***
+
+
+### Exercise 2.7 - variable name with special characters
+
+```{r}
+# Enter an arbitrary name with special characters inside the left apostrophes
+# and print the value of the variable
+# `` <- 2
+                      
+```
+
+
+
+
+***
+
+
+### Exercise 2.8 - printing and deleting global environment variables
+
+```{r}
+# print all of the global environment variables that have been created so far
+
+# delete some of the above-written variables - eg rm(x, y, z)
+# list all remaining variables
+
+# delete ALL variables from the global environment
+# (cautiously with this call in practice!)
+# Make sure the global environment is empty
+
+```
+
+***
+
+
+Finally, whenever we need help with some function, we have the following options available:
+
+- write only `<function_name>` (without parenthesis with parameters) and press *<ENTER>* - if the function is written in *R* (and not just *proxy* to a C implementation) the screen will get a printout of the original code function
+- Write `help (<function_name>)` or `? <name_functions>` to get a help function page with the list of parameters, examples, and so on.
+- Write `example (<function_name>)` where we get a list of examples of using the function and the results obtained
+
+The following code snippet shows how to use the above methods (due to space savings, we do not show their result).
+
+
+```{r, eval = F}
+#program code for `ls` function
+ls
+
+# help for `ls` function
+?ls # or help(ls)
+
+# examples of using the `ls` function
+example(ls)
+```
+
+***
+
+## Missing, unknown, and non-existent values
+
+In R there are three ways of modeling "non-existent" values:
+
+* `NA` - (* not available *) Missing or unknown value of a particular type
+* `NaN` - (* not a number *) "impossible"number, eg `0 / 0`
+* `NULL` - non-existent value, literally "nothing"
+
+
+***
+
+### Exercise 2.9 -  NA, NaN and NULL
+
+```{r}
+# how much is "5 + unknown number" 
+
+
+# how much is "5 + non-existent number" 
+
+
+# check classes of the following:
+   # NA
+   # arithmetic operation between numeric and NA
+   # NaN
+   # NULL
+
+
+```
+
+*
+
+
+***
+
+### Exercise 2.10 - check NA, NaN and NULL
+
+```{r}
+# which of the following is NA?   NA, NaN, NULL, "", 0
+
+# which of the following is NaN?   NA, NaN, NULL
+
+# which of the following is NULL?   NA, NaN, NULL
+```
+
+
