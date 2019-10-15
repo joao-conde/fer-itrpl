@@ -1,0 +1,84 @@
+---
+title: "Homework2 - Basic data types and operators"
+author: "João Conde"
+date: "15/10/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1. What is the result of the following commands? Consider a possible result before executing.
+
+```{r}
+as.complex(2)
+as.integer(-3.25)
+as.logical("0")
+as.numeric(TRUE)
+as.character(11.5 + 2i)
+as.numeric("ABC")
+```
+
+# Execution results:
+# 2+0i
+# -3
+# NA
+# 1
+# "11.5+2i"
+# NA
+
+
+# 2. How do the following expressions look like in R:
+
+# “three times ten on the power of nine”
+```{r}
+3*10^9
+```
+
+# “logarithm of 5”
+```{r}
+log(5)
+```
+
+# “integer division of 10 by 3”
+```{r}
+10 %/% 3
+```
+
+# “the remainder of integer division of 10 by 3”
+```{r}
+10 %% 3
+```
+
+# “tangent of 75 degrees”
+```{r}
+tan(75 * pi/180)
+```
+
+
+# 3. Using the if expression, check whether the result of dividing a whole number with NULL is considered to be NA, NaN or NULL.
+
+```{r}
+result <- 10/NULL
+
+if(length(is.na(result)) != 0) {
+  print("Dividing a whole number with NULL is NA")
+} else if(length(is.nan(result)) != 0) {
+  print("Dividing a whole number with NULL is NaN")
+} else if(is.null(result)) {
+  print("Dividing a whole number with NULL is NULL")
+} else print("Result is none of the above (NA, NaN or NULL)")
+```
+
+
+# 4. Enter 5 in the variable x. Print all environment variables. Then put NULL in the x variable. Is this variable still there?
+
+```{r}
+x <- 5
+ls()
+x <- NULL
+ls()
+```
+
+## Yes the variable is still there but with NULL value.
