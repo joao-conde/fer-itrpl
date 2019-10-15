@@ -1,0 +1,84 @@
+---
+title: "Homework3 - Vectors, matrices and lists"
+author: "João Conde"
+date: "15/10/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1. Create the following vectors:
+
+## (11, 12, 13,…, 99)
+```{r}
+v <- 1:99
+v
+```
+
+## (0, 0, 0, 0, … , 0) (100 zeris)
+```{r}
+v <- rep(0, 100)
+v
+```
+
+## (0, 0.1, 0.2, …., 1.0)
+```{r}
+v <- seq(0, 1, 0.1)
+v
+```
+
+
+# 2. What is the sum of all numbers from 101 to 1001, if we skip all numbers divisible by 10? Use the sum function.
+
+```{r}
+v <- 101:1001
+sum(v[v %% 10 == 0])
+```
+
+
+# 3. Create a 3 x 3 matrix by performing the following commands (the sample function will be done in one of the following lessons). Calculate the inverse matrix with the solve function. Make sure the multiplication of the original and inverse matrix result with the unit matrix (use the % *% operator to multiply the matrices).
+
+```{r}
+# We create a matrix of 3x3 randomly selected elements from 1 to 100
+set.seed(1234)
+m <- matrix(c(sample(1:100, 9, T)), nrow = 3, ncol = 3, byrow = T)
+inverse_m <- solve(m)
+m
+cat("---------------------------------\n")
+inverse_m
+cat("---------------------------------\n")
+inverse_m %*% m # because of off-diagonals this does not appear to be identity matrix because of floating-point precision errors
+cat("---------------------------------\n")
+round(m %*% inverse_m) # rounding the values confirms it is the identity matrix
+```
+
+
+# 4. Initialize the stuff list used in the lesson. Do the following:
+
+```{r}
+stuff <- list(numbers = c(1,2,3),
+                 letters = c("A", "B"),
+                 c(T, F),
+                 titles = c("Mr", "Mrs", "Ms"))
+
+# print the class of the second element of the list
+class(stuff[[2]])
+
+# print the element in the third place of the element of the list named letters
+stuff$letters[3]
+
+# check the length of the element called titles and add the title ‘Prof’ to the last position
+length(stuff$titles)
+stuff$titles <- c(stuff$titles, "Prof")
+length(stuff$titles)
+stuff$titles
+
+# check if the number 4 is contained in the first element of the list
+4 %in% stuff[1]
+
+# add a new list of three vectors a, b and c which all contain elements (1,2,3) to the last place of the list
+stuff <- append(stuff, list(list(a = c(1,2,3), b = c(1,2,3), c = c(1,2,3))))
+str(stuff)
+```

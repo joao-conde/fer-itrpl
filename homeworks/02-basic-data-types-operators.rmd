@@ -20,14 +20,6 @@ as.character(11.5 + 2i)
 as.numeric("ABC")
 ```
 
-# Execution results:
-# 2+0i
-# -3
-# NA
-# 1
-# "11.5+2i"
-# NA
-
 
 # 2. How do the following expressions look like in R:
 
