@@ -371,5 +371,4 @@ cat("-------------\n")
 is.null(NA)
 is.null(NaN)
 is.null(NULL)
-cat("-------------\n")
 ```

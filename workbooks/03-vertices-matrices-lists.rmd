@@ -35,19 +35,20 @@ names <- c("Ivo", "Pero", "Ana")
 
 ## Exercise 3.1 - creating vectors
 
-
 ```{r}
 # create a new vector `x` with four arbitrary elements of the following types:
 # logical, real, character and integer
-
+x <- c(TRUE, 4.5, "ABC", 5L)
 # print the vector content and its class screen
-
+x
+class(x)
 ```
 
 
 ***
 
 ## Exercise 3.2  - explicit vector type conversion
+
 ```{r}
 x <- c(1, T, 2L)
 y <- c(1L, 2L, 3L)
@@ -55,17 +56,18 @@ z <- c(1.25, TRUE, "Ana")
 
 # Consider a possible result and then try to make the following conversions
 # vector `x` in numeric type
+as.numeric(x)
+
 # vector `y` in character type
+as.character(y)
+
 # vector `z` in a whole type
+as.integer(z)
 ```
 
 
-
 ***
-
-
 ## Vector concatenation
-
 
 ```{r}
 a <- c(1, 2, 3)
@@ -90,11 +92,10 @@ In addition to the `c` function, R also offers additional convenient ways of cre
 
 ```{r}
 # print the results of the following commands
-
-# 1: 5
-# rep(c(1, 2, 3), times = 3)
-# rep(c(1, 2, 3), each = 3)
-# seq(1, 5, by = 0.5)
+1:5
+rep(c(1,2,3), times=3)
+rep(c(1, 2, 3), each = 3)
+seq(1, 5, by = 0.5)
 ```
   
 
@@ -135,12 +136,8 @@ a
 ```
  
 
-
-
-
 ***
  
-
 ## Exercise 3.4  - vectorization principle
 
 ```{r}
@@ -151,23 +148,19 @@ b <- 4:6
 
 # call the abs function to calculate the absolute value
 # over the vector `x` and print the result
+abs(x)
 
 
 # add vectors `a` and` b` with operator `+`
 # and print the result
-
+a+b
 
 # multiply vectors `a` and` b` with operator `*`
 # and print the result
-
+a*b
 ```
 
-
-
 ***
-
-
-
 
 ***
 
@@ -179,11 +172,13 @@ b <- c(1, 2)
 c <- rep (5, 3)
 
 # duplicate vector `a` and print the result
+2*a
 
 # divide vector `a` with vector` b` and print the result
+a/b
 
 # multiply vectors `a` and` c` and print the result
-
+a*c
 ```
 
 ***
@@ -203,6 +198,8 @@ b <- c(T, T, F)
 
 # apply scalar and vector version of logical operator "or"
 # over the `a` and` b` vectors and print the result
+a | b
+a || b
 
 ```
 
@@ -217,11 +214,14 @@ x <- 1:5
 y <- seq(-10, 10, 5)
 
 # print x and y
+x
+y
 
 # print the result of the x > y command and explain the result
+x > y #TRUE for the ith element if xi > yi, false otherwise
 
 # print the result of the x < 3 command and explain the result
-
+x < 3 #TRUE for the ith element if xi < 3
 ```
 
 
@@ -242,10 +242,7 @@ Which indexing we choose depends on whether we want to access the elements depen
 
 ***
 
-
-
 ### Location Indexing
-
 
 *Location Indexing* is the generalization of an already familiar indexing principle where we state the ordered numbers (indices) of elements we are interested in. If we want more elements, we simply put their indices "packed" into a numeric vector.
 
@@ -260,11 +257,13 @@ Try solving the next task by using the appropriate numeric vectors as indexing p
 x <- 1:10
 
 # print the first element of x
+x[1]
 
 # print the first three vector elements x
+x[1:3]
 
 # print the first, fifth, and seventh elements of the vector x
-
+x[c(1,5,7)]
 ```
 
 ***
@@ -275,13 +274,14 @@ x <- 1:10
 x <- 1:10
 
 # answer the following questions with the help of an appropriate example
-
 # what does index 0 return?
+x[0] # integer(0)
 
 # what does a negative index return?
+x[-2] # for -x, every number in the vector except the one at index x 
 
 # what happens if you use an index outside of vector boundaries
-
+x[80] # we get NA
 ```
 ***
 
@@ -297,15 +297,21 @@ a <- 1:10
 
 # set all vector elements of `a` from the second to the eighth place to zero
 # print vector `a`
+a[2:8] <- 0
+a
 
 b <- 1:20
 b [2 * 1:5] <- 0
 
 # Consider what the vector `b` looks like after the above command
 # print the vector `b` and explain the result
+b 
 
+# Answer:
+# 1:5 creates the vector (1,2,3,4,5)
+# 2 * that vector makes it (2,4,6,8,10)
+# so, for positions (2,4,6,8,10) the b vector has a 0
 ```
-
 
 
 ***
@@ -322,12 +328,13 @@ x <- 1:10
 
 # create a logical vector `y` of length 10 with an arbitrary combination of
 # TRUE and FALSE values
-
+y <- c(T, F, T, T, F, F, T, T, F, F)
 # index the vector `x` with the` y` vector, print and explain the result
-
+x[y] # filters x vector picking the elements with index i if y[i] is TRUE
 
 # print all vector elements `x` which are less or equal to 5
 # use the appropriate expression as a logical index vector
+x[x <= 5]
 
 ```
 
@@ -339,10 +346,12 @@ y <- seq (1, 100, 7)
 students <- c("Ivo", "Petra", "Marijana", "Ana", "Tomislav", "Tin")
 
 # print all even, and then all odd vector elements of `y`
+y[y %% 2 == 0]
+y[y %% 2 != 0]
 
 # print all vector elements from `students` which represent 3-letter names
 # (note: we use the `nchar` function to count the characters in R)
-
+students[nchar(students) == 3]
 ```
 
 ***
@@ -363,10 +372,10 @@ height <- c(165, 173, 185, 174, 190)
 names (height) <- c("Marica", "Pero", "Josip", "Ivana", "Stipe")
 
 # print the vector `height`
-
+height
 
 # print the height of Pero and Josip
-
+height[c("Pero","Josip")]
 ```
 
 ***
@@ -374,7 +383,7 @@ names (height) <- c("Marica", "Pero", "Josip", "Ivana", "Stipe")
 If for some reason we want to delete the names of vector elements, simply forward `NULL` to `names`.
 
 ```{r}
-names <- NULL
+names(height) <- NULL
 ```
 
 ***
@@ -398,10 +407,11 @@ x <- 1:12
 
 # create a matrix with 3 rows and 4 columns using the `matrix` function
 # print the result on the screen
+matrix(x, 3, 4)
 
 # repeat the procedure but add the parameter `byrow = T` to the calling function
 # print the result on the screen and compare it to the previous result
-
+matrix(x, 3, 4, byrow=T)
 ```
 ***
 
@@ -410,12 +420,17 @@ x <- 1:12
 m <- 1:10
 
 # print the result of call of the `dim` function to the vector` m`
+dim(m)
 
 # use the `dim` function to vector` m` with the assigment of the vector c(2, 5)
+dim(m) <- c(2,5)
 
 # print `m` and comment the result
+m # invoking the function dim we add the attribute dim so it becomes a matrix
 
 # print the call results of `nrow` and` ncol` on the matrix `m`
+nrow(m)
+ncol(m)
 ```
 
 ***
@@ -448,10 +463,11 @@ b <- 5:8
 c <- c(0.0)
 
 # create a matrix `m` in which vectors `a` and `b` will be columns
-
+m <- cbind(a, b)
 # add a new row to the top of the matrix `m` with vector elements` c`
+m <- rbind(c, m)
 # print matrix `m`
-
+m
 ```
 
 
@@ -485,16 +501,22 @@ colnames (m) <- c("a", "b", "c", "d", "e")
 
 # print all elements of the matrix m from the second to the fourth line
 # and from the third to the fifth column
+m[2:4, 3:5]
+cat("---------------\n")
 
 # set all elements in column "c" to zero
 # and then print the first two lines of matrix `m`
+m[,"c"] <- 0
+m[1:2]
+cat("---------------\n")
 
 # print only column "d"
+m[,"d"]
+cat("---------------\n")
 
 # rewrite column "d", but add the `drop = FALSE` parameter when indexing
 # Separate the parameter with a comma (as if it was a "third" indexing dimension)
-
-
+m[,"d", drop=FALSE]
 ```
 
 ***
@@ -531,10 +553,10 @@ mojaLista <- list(a = 1, b = 2:100, c = list(x = 1, y = 2))
 # element called `letters' with letters 'A' and 'B'
 # nameless element with logical vector `c(T, F)`
 # element called `titles' with the concent of 'Mr', 'Mrs' and 'Ms'
-
+stuff <- list(numbers = c(1,2,3), letters = c("A", "B"), c(T, F), titles = c("Mr", "Mrs", "Ms"))
 
 # print the `stuff` variable
-
+stuff
 ```
 
 
@@ -544,7 +566,7 @@ mojaLista <- list(a = 1, b = 2:100, c = list(x = 1, y = 2))
 
 ```{r}
 # print the structure of the `stuff` list
-
+str(stuff)
 ```
 
 ***
@@ -576,10 +598,10 @@ Often we do not want to work with a list element as a "small list", but want to 
 ## Exercise 3.21 - operator `[[`
 ```{r}
 # print the first element of the list `stuff` using the operator `[[`
-
+stuff[[1]]
 
 # check its type
-
+typeof(stuff[[1]])
 ```
 
 ***
@@ -597,11 +619,12 @@ The aforementioned operator is most often used to retrieve the selected element 
 ```{r}
 # print the `letters` element of the `stuff` list
 # using `[[` the operator 
+stuff[["letters"]]
 
 
 # print the `letters` element of the `stuff` list
 # using the `$` operator 
-
+stuff$letters
 ```
 
 ***
@@ -618,11 +641,11 @@ Finally, we learn how to add an element to the list. This is easiest to do using
 ```{r}
 # in the `stuff` list add the `evenNumbers` element which contains
 # all even numbers from 1 to 100
+stuff$evenNumbers <- seq(2,100,2)
 
 # delete the third element from the list
-
+stuff[[3]] <- NULL
 
 # print the `stuff` list
+stuff
 ```
-
-
