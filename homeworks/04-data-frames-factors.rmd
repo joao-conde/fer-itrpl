@@ -8,3 +8,80 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+# 1. In the folder along with this notebook, locate the file citiesNOHEADER.csv which represents the file that is the same as cities.csv except for the following features:
+## - column names are missing
+## - the gap is used as a separator
+
+## Try using the documentation to load the data from this file into the variable ’citiesNH` which will be the same variable as the cities used in the lesson.
+
+```{r}
+citiesNH <- read.csv("data/citiesNOHEADER.csv", header=FALSE, sep=" ")
+citiesNH
+```
+
+
+# 2. In the folder along with this notebook, locate the file receipt.csv and load it into the receipt variable. Make sure that character sequences are not automatically converted into factors. Print to the screen:
+
+```{r}
+receipt <- read.csv("data/receipt.csv")
+
+## - the number of rows in this table
+nrow(receipt)
+
+## - the number of columns in the table
+ncol(receipt)
+
+## - column names
+names(receipt)
+
+receipt
+```
+
+
+# 3. For the receipt table, do the following:
+
+```{r}
+## - factorize the itemCategory (katArtikl) column
+receipt$katArtikl <- factor(receipt$katArtikl)
+
+## - print the code (sifArtikl), name(nazArtikl) and price (cijena) of all items of the category (katArtikl) “sweets and snacks” (slatkisi i grickalice) cheaper than 12 Kn
+receipt[receipt$katArtikl == "slatkisi i grickalice" & receipt$cijena < 12, c("sifArtikl", "nazArtikl", "katArtikl")]
+
+## - print how many products each category has in the receipt
+table(receipt$katArtikl)
+
+## - add a total column that will contain the total price of each bought item set using the price and quantity
+receipt$totalPrice <- receipt$cijena * receipt$kolicina
+
+## - calculate the total amount of the bill/receipt
+sum(receipt$totalPrice)
+
+receipt
+```
+
+
+# 4. In the folder along with this note find the file citiesNULL.csv which, if loaded without thestringsAsFactors = FALSE parameter, can result in a problematic scenario described in the lesson.
+# Try to do the following:
+
+```{r}
+# load the data from this file into the variable citiesNULL where you deliberately omit the stringsAsFactors = F
+citiesNULL <- read.csv("data/citiesNULL.csv")
+
+# add avgSal1 column that will represent the result of using the as.numeric function over the avgSalKn (prosjPlacaKn) column
+citiesNULL$avgSal1 <- as.numeric(citiesNULL$prosjPlacaKn)
+
+# add avgSal2 column that will represent the result of using the as.character function over the avgSalKn column
+citiesNULL$avgSal2 <- as.character(citiesNULL$prosjPlacaKn)
+
+# print out citiesNULL and comment the results
+citiesNULL
+
+## Answer:
+
+## Basically, when reading the CSV, because we did not set stringsAsFactors as FALSE, when R reads the CSV and finds in the column all integers but a NULL, it assumes the column as a factorial (categories). 
+
+## The avgSal1 column will be the conversion of the factorial to a numeric. In this case, the internal R representation given to each category. It goes from 1 to 5 (number of 'categories'). All values are ordered as strings, so the lowest integer is still the first and the NULL string will be last.
+
+## Of course, using the as.character transformation we get the same values, since they were already treated as strings
+```
