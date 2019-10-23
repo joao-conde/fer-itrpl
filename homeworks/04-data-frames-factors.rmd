@@ -1,0 +1,10 @@
+---
+title: "Homework4 - Data frames and factors"
+author: "João Conde"
+date: "23/10/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```

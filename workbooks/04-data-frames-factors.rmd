@@ -1,0 +1,425 @@
+
+---
+title: "4 Data frames and factors"
+author: "student"
+date: "24. kolovoz 2017"
+output:
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(results = 'hold')
+```
+
+***
+
+## Data frames
+
+As already mentioned, the data frame is by far the most popular element of the programming language R. The language R's primary fnction is data analysis, and the data frame is actually an object representation of the data set we intend to analyze. In other words, the data frame is an object similar in function to a sheet in *Microsoft Excel* or a table in a relational database. Almost every session in R is oriented around manipulating data frames - but while in  *Excel* we manage the table with the help of a graphical interface, and in relational database via the query language *SQL*, in R we manage data programatically through  the data frames.
+
+Take for example the following table:
+
+zipCode |	cityName  |	avgSalKn  |	population 	 | cityTax
+----|------------|----------|----------|------
+10000	 |Zagreb |	6359.00	 |790017 |	18
+51000	 |Rijeka |	5418.00	 |128384 |	15
+21000	 |Split	 |5170.00	 |167121 |	10
+31000	 |Osijek |	4892.00	 |84104 |	13
+20000	 |Dubrovnik	 |5348.00	 |28434	 |10
+***
+
+
+## Creating data frames
+
+There are several ways to create data frames, and we'll show two of the most frequently encountered scenarios in practice:
+
+- Programatic creation via the `data.frame` function
+- Load data from an external source using the `read.csv` function
+
+
+***
+
+## Exercise 4.1 -  creating data frames programatically
+
+
+```{r}
+cities <- data.frame(zipCode = c(10000, 51000, 21000, 31000, 2000),
+  cityName = c("Zagreb", "Rijeka", "Split", "Osijek", "Dubrovnik"),
+  avgSalKn = c(6359., 5418., 5170., 4892., 5348.),
+  population = c(790017, 128384, 167121, 84104, 28434),
+  cityTax = c(18, 15, 10, 13, 10))
+
+
+# print the variable `cities`
+cities
+```
+
+
+***
+
+## Creating dataframes from CSV
+
+Below we can see an example of a CSV file that matches the data frame created in the previous example. Suppose the file is named `cities.csv`. The data is separated by a comma (no spaces!), Every observation in your line, and the optional first line represents the column names.
+
+
+```{r, eval = F}
+zipCode,cityName,avgSalKn,population,cityTax
+10000,Zagreb,6359.00,790017,18 
+51000,Rijeka,5418.00,128384,15
+21000,Split,5170.00,167121,10
+31000,Osijek,4892.00,84104,13 
+20000,Dubrovnik,5348.00,28434,10
+```
+
+
+```{r, eval = F}
+zipCode;cityName;avgSalKn;population;cityTax
+10000;Zagreb;6359,00;790017;18 
+51000;Rijeka;5418,00;128384;15
+21000;Split;5170,00;167121;10
+31000;Osijek;4892,00;84104;13 
+20000;Dubrovnik;5348,00;28434;10
+```
+
+***
+
+## Different CSV standards
+
+Since the decimal point is a standard in the Republic of Croatia, in working with CSV files we have to be careful which of the two standard records is used. Luckily, the R language offers support functions for both standards, so we do not have to adapt the input files specifically, just be careful what function we will choose.
+
+Suppose we have these two files in the workbook:
+
+- `cities.csv`
+- `citiesAlt.csv`
+
+(If we do not have these files available, we can easily create them with the help of plain text editors (eg *Notepad* or *gedit*) and copying the above rows.)
+
+
+***
+
+
+## Functions `read.csv`, `read.csv2` and `read,table`
+
+To create data frames from CSV files we use the following functions:
+- `read.csv` - for "normal" CSV files with a comma as separator
+- `read.csv2` - for an alternative CSV standard that use semi-colons
+
+
+***
+
+
+Some of the parameters and associated values of `read.csv` (or `read.table`) functions that are useful to know are:
+
+- `header = FALSE` - for files without a header
+- `sep = "#"` - for files that use some more "exotic" separator, in this case `#`
+- `na.strings = 'NULL'` - the term used in the dataset to represent the missing values that will become `NA` in R
+- `nrows = 2000` - maximum number of lines to be read, in this case 2000
+- `stringsAsFactors = F` - preventing automatic creation of factor columns (which we will learn in the lesson below)
+- `encoding = 'UTF-8'` - for non-ASCII text encoding standards (especially if we are working with Croatian speaking area data using diacritical characters)
+
+Let's try to load data from available CSV files now. This data will not require special parameters, and will only be loaded by providing the path to the associated files (one that uses the comma and the other that uses the semi-colon as a separator).
+
+
+***
+
+
+## Exercise 4.2 -  reading CSV files
+
+```{r}
+# load data from files `cities.csv` and` citiesAlt.csv`
+# save data in variables called `cities2` and` cities3` 
+cities2 = read.csv("data/cities.csv")
+cities3 = read.csv2("data/citiesAlt.csv")
+# print `cities2` and` cities3` 
+cities2
+cat("-----------\n")
+cities3
+```
+
+
+***
+
+
+## Working with data frames
+
+Let's look at some useful functions for working with data frames, ie tables. A good part of them is already known from experience in working with lists and matrices:
+
+- `nrow` - number of lines
+- `ncol` or` length` - the number of columns (since the frame behaves both as a matrix and as a list)
+- `dim` - table dimensions
+- `names` - column names
+- `head` - prints several rows from the beginning of the table
+- `tail` - prints several rows from the end of the table
+- `str` - prints table structure
+- `summary` - summarizes the statistical information about table columns
+
+
+Let's try some of these functions:
+
+
+
+***
+
+
+## Exercise 4.3 -  working with data frames
+
+```{r}
+# print the dimensions of the data frame `cities`
+dim(cities)
+cat("-----------\n")
+
+# print the table structure of `cities`
+str(cities)
+cat("-----------\n")
+
+# print the first few rows of the data frame `cities`
+head(cities)
+cat("-----------\n")
+
+# print summarized statistical information about  `cities` 
+summary(cities)
+```
+
+
+
+***
+
+
+## Selecting rows and columns
+
+
+We've already said that data frames behave both as matrices and as lists, which is a feature we often use when selecting rows and columns of data frames. Specifically, we use the following:
+
+- for selecting rows and columns: two-dimensional indexing with the help of index vectors 
+- for select a column: operator `$`
+
+
+
+***
+
+
+## Exercise 4.4 -  selecting rows and columns
+
+```{r}
+# print the table `cities` (for reference)
+cities
+cat("-----------\n")
+
+# print the first three rows, the third and fifth column
+cities[1:3, c(3,5)]
+cat("-----------\n")
+
+# print column "cityTax"
+cities$cityTax
+cat("-----------\n")
+
+# print zipCode and city names of all cities which 
+# have cityTax greater than 12% and a population of more than 100,000
+cities[cities$cityTax > 12 & cities$population > 1e5, c("zipCode", "cityName")]
+```
+
+***
+
+## Adding and deleting rows and columns
+
+To add and delete rows and columns, remember that the data frame is a kind of hybrid of a matrix and a list, ie if we know how to add rows and columns to a matrix or add new elements in a list, then we can add data to the data frame in an equivalent way. When working with data frames, adding new columns is a bit more common than adding rows.
+
+As we have said, we add columns to the data frame in the same way as we add list elements - while paying attention that the added column has the same number of elements as the other columns. New columns are often derived from existing columns to create new binary indicators, the results of arithmetic data expressions using other columns, etc.
+
+***
+
+
+
+## Exercise 4.5 - adding new columns to a data frame
+
+```{r}
+# add the logical column` highCityTax` to the  `cities` table
+# which will indicate whether the cityTax is greater than 12%
+cities$highCityTax <- cities$cityTax > 12
+
+# assume the following (imaginary) way of calculating city tax income
+# - cities have about 60% of working population
+# - each worker pays a tax that is roughly equal to 10% of net salary
+# - income from city tax per worker is (cityTaxa percentage)*(tax income)
+#
+# add a `monthlyTaxIncome` column which will use the average salary, city tax 
+# rate and population to estimate hte monthly tax income of the cities
+# (in million Kns)
+# round up to two decimals ( using the `round` function,
+# e.g. : round(100.12345, 2) ==>  100.12  )
+cities$monthlyTaxIncome <- round(0.6 * cities$population * 0.10 * 
+                          cities$avgSalKn * cities$cityTax / 1e6 , 2)
+
+# print `cities`
+cities
+```
+
+***
+
+You can also add rows and columns similar to adding rows and columns to a matrix - with the `rbind` and` cbind` functions. For `rbind` we usually add a new data frame with rows that have the appropriate order and type of elements, while we can add a completely new vector with ` cbind`, keeping in mind that the number of elements corresponds to the number of rows of the original data frame.
+
+***
+
+## Exercise 4.6 - data frames and `rbind`/`cbind` functions
+
+```{r}
+df1 <- data.frame(a = c(1,2,3), b = c("A", "B", "C"), c = c(T, F, T))
+df2 <- data.frame(a = 1, b = "A", c = 3)
+
+# make a data frame which has `df1` and `df2` as rows
+# name it `df12`
+df12 <- rbind(df1, df2)
+
+# add a `firstNames` columns containing names Ivo, Ana, Pero and Stipe
+# use `cbind`
+df12 <- cbind(df12, firstNames = c("Ivo", "Ana", "Pero", "Stipe"))
+
+# print `df12`
+df12
+```
+
+
+***
+
+## Deleting rows and columns
+
+For *deleting rows and columns* we can also use the same methods for managing the matrices and lists. Specifically:
+
+- deleting rows and columns can be done by using two-dimensional indexing of rows and columns that we want to "keep"
+- deleting columns can be done by assigning the value `NULL` to the selected column
+
+***
+
+
+## Exercise 4.7 - deleting rows and columns
+
+```{r}
+# delete the first row and second column from `df12`
+# use the indexing method
+df12 <- df12[-1,-2]
+
+# delete the `firstNames` column by using the `NULL` method
+df12$firstNames <- NULL
+
+# print `df12`
+df12
+```
+
+***
+
+
+## Factors
+
+**Factors** in R are actually the type of data that represents what is referred to in statistics as a **nominal** or **categorical** variable. 
+
+***
+
+
+## Exercise 4.8 - factorizing a character vector
+
+```{r}
+bloodPressure <- c ("low", "high", "high", "normal", "normal",
+          "low", "high", "low", "normal", "normal")
+
+# print the variable `bloodPressure`
+bloodPressure
+
+# print its class
+class(bloodPressure)
+
+# create a variable `bloodPressure.f` by factorizing
+# the variable `bloodPressure`
+bloodPressure.f <- factor(bloodPressure)
+
+# print the variable `bloodPressure.f`
+bloodPressure.f
+
+# print its class
+class(bloodPressure.f)
+```
+
+
+***
+
+
+## Exercise 4.9 - using the levels attribute
+
+
+```{r}
+# add an 11th element to `bloodPressure.f` called "very low" 
+bloodPressure.f[11] <- "very low"
+
+# print the variable `bloodPressure.f`
+bloodPressure
+
+# create a variable `bloodPressure.f2` by factorizing
+# the variable `bloodPressure`
+# add the `levels` attribute which will also contain
+# values "very low" and "very high"
+bloodPressure.f2 <- factor(bloodPressure, levels=c("very low", "low", "normal", "high", "very high"))
+
+# add an 11th element to `bloodPressure.f2` called "very low" 
+bloodPressure.f2[11] <- "very low"
+
+# print the variable `bloodPressure.f2`
+bloodPressure.f2
+```
+
+
+
+
+***
+
+
+## Exercise 4.10 - the table function
+
+
+```{r}
+# print how are the categories represented in `bloodPressure.f2`
+table(bloodPressure.f2)
+```
+
+***
+
+## Exercise 4.11 - ordinal factor
+
+
+```{r}
+# create a variable `bloodPressure.f3` by factorizing
+# the variable `bloodPressure`
+# add the `levels` attribute which will also contain
+# values "very low" and "very high"
+# also set the `order` paramater to `TRUE`
+# watch out for category ordering!
+bloodPressure.f3 <- factor(bloodPressure, 
+                           levels=c("very low", "low", "normal", "high", "very high"),
+                           order=TRUE)
+
+# print the variable `bloodPressure.f3`
+bloodPressure.f3
+
+# check if it is in fact the ordinal factor now
+# use the `is.ordered` function
+is.ordered(bloodPressure.f3)
+
+# check if the first patient has lower blood pressure
+# than the third
+bloodPressure.f3[1] < bloodPressure.f3[3]
+```
+
+***
+
+## Exercise 4.12 - internal structure of a factor
+
+
+```{r}
+# print `bloodPressure.f3` converted to character
+as.character(bloodPressure.f3)
+
+# print `bloodPressure.f3` converted to numeric
+as.numeric(bloodPressure.f3)
+```
+
+
