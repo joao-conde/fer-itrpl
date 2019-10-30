@@ -1,0 +1,52 @@
+---
+title: "Homework6 - Packages, built-in functions and environments"
+author: "João Conde"
+date: "30/10/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Exercises
+
+### 1. Load the following packages in the working environment: magrittr, dplyr, tidyr, ggplot2. Print the search path and check where the loaded packages are.
+
+```{r}
+packages <- c("magrittr", "dplyr", "tidyr", "ggplot2")
+for(package in packages) library(package, character.only = TRUE)
+search()
+```
+
+
+### 2. The following commands will create a vector of 20 randomly selected natural numbers from 1 to 100.
+
+```{r}
+# 20 random natural numbers from 1 to 100, with repetition
+
+set.seed(1234)
+a <- sample(1:100, 20, replace = T)
+
+### Use the cheat sheets and/or official documentation to find built-in functions that perform the following tasks.
+### Print:
+### - vector a
+a
+
+### - the values of the vector a arranged in reverse order
+rev(a)
+
+### - unique values from the vector a
+unique(a)
+
+### - the values of the vector a sorted in ascending order
+sort(a)
+```
+
+
+### 3. We mentioned that loaded packages are actually “environments”. If we want to get a direct reference to them, we need to use as.environment and the package name. Try to get a reference to the package:magrittr package in the form of an environment, and use ls to check which names are contained in it.
+
+```{r}
+ls(envir=as.environment("package:magrittr"))
+```

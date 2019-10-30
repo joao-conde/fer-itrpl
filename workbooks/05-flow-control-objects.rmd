@@ -33,7 +33,7 @@ This command is pretty straightforward. In the next exercise we will show how to
 ## Exercise 5.1 - `if` command
 
 
-```{r, eval = F}
+```{r}
 
 # execute the next conditional execution command
 if (2 > 1) print ("Success!")
@@ -63,7 +63,7 @@ The role of this operator in R is performed by the `ifelse` function.
 ## Exercise 5.2 - `ifelse` command
 
 
-```{r, eval = F}
+```{r}
 a <- 1:3
 b <- c(0, 2, 4)
 
@@ -105,7 +105,7 @@ Let's see how this loop works in the next exercise.
 ## Exercise 5.3 - `repeat` loop
 
 
-```{r, eval = F}
+```{r}
 # answer the following questions before running the next block:
 
 # - will the loop run indefinitely?
@@ -139,7 +139,7 @@ We often know the exact condition for exiting the loop and want to place it in a
 ## Exercise 5.4 - `while` loop
 
 
-```{r, eval = F}
+```{r}
 # add the loop condition so it loops
 # exactly 7 times
 
@@ -168,7 +168,7 @@ Note that here the variable `i` is not a "counter" - in every loop iteration it 
 
 ## Exercise 5.5 - `for` loop
 
-```{r, eval = F}
+```{r}
 a <- seq(-10, 10, 4)
 
 # print vector elements of `a` one by one

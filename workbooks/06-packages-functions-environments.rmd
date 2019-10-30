@@ -1,0 +1,291 @@
+
+---
+title: "6 Packages built-in functions and environments"
+author: "student"
+date: "24. kolovoz 2017"
+output:
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(results = 'hold')
+```
+
+***
+
+## Working with packages
+
+The standard R distribution comes with two collections of packages (called `r-base` and `r-recommended`) that contain a kind of "core" of the language R-set of elements sufficient for conducting standard types of data analysis using the programming language R. In addition, **CRAN** (*Comprehensive R Archive Network*) is a rich repository of additional packages for a wide variety of applications, from "repairing" the basic elements of the language R to strictly specialized packages for specific types of analyses.
+
+As is common practice in other programming languages, R uses a "package" or "library" system to logically organize already "programmed" collections of data, functions, and compiled code.
+
+When starting the R environment, certain packages are automatically loaded in memory, making their content available for use. The list of loaded packages can be obtained using the `search` function.
+
+***
+
+## Exercise 6.1 - search path
+
+```{r}
+# Call the `search` function (no parameters) 
+# and see which packages are loaded into the environment
+search()
+```
+
+
+***
+We see that most packages are listed as ``package::package_name``. The layout of the package also represents their "priority" in the namespace traversal path, which will be discussed later.
+
+If we want to load a new package into our environment, we can do this by using the `library` function with the package name provided as parameter (without quotes).
+
+
+***
+
+## Exercise 6.2 - loading packages in the working environment 
+
+```{r}
+# load the `dplyr` package 
+library(dplyr)
+```
+
+
+
+***
+## Exercise 6.3 - installing a package from a CRAN repository
+
+```{r, eval=F}
+# install the `dplyr` package from the CRAN repository
+# (You can do this even if you already have the specified package)
+install.packages("dplyr", repos = "http://cran.us.r-project.org")
+
+# load the package again into the work environment
+library(dplyr)
+
+# print the search path
+search()
+```
+
+
+Note: as a rule, we install packages only once, through the console so that there is never a need to install the package installations in *R Markdown* documents; also, for easier organization of reports, loading all required packages is usually done by at the beginning of the document, in the code snippet called `setup`.
+
+***
+
+We can notice that installing and loading packages will automatically acquire and load all the packages that are prerequisites for using the requested package, which greatly facilitates the user's work, whu does not have to worry about what "extra" needs to be installed in order to use package features.
+
+If we want to find out more information about a package, we can also do this by using the `library` function with the `help` parameter set to the package name.
+
+
+```{r, eval = F}
+library(help = dplyr)  # recommendation: try directly in the console
+```
+
+
+
+Another quite popular way of perusing documentation of the package is with the help of the so-called "vignettes". Vignettes are actually "mini-tutorials" of a package done in HTML which present the functionality of the package in an accessible, easlly legible way with the help of detailed explanations and the associated program code. We can look at which vignettes are installed on the system by calling the `browseVignettes()` function without parameters (or optionally adding as the parameter the package name if we only care about its vignettes). If the package has only one vignette (for example, `stringr`), we can also open the vignette immediately with the help of the `vignette` option.
+
+```{r, eval = F}
+vignette("stringr")  # recommendation: try directly in the console
+```
+
+
+***
+
+## Built-in functions
+
+In previous chapters, we have already introduced some of the functions that we get together with our R distribution. These are, for example, numeric functions (`log`,` abs`, `sqrt`,`round`, etc.), vector creation functions (`rep`,` seq`, etc.), package functions (`install.packages`, `library`, etc.) and so on.
+
+R rarely uses the term "built-in" functions since - as it was already shown - the R environment automatically loads some commonly used packages whose elements are immediately available for use, without necessarily indicating the name of the package they are in. 
+
+For example. the `stats` package contains a rich set of functions related to statistical processing. One of these functions is `rnorm`, which returns the numerical vector of the desired length whose elements are randomly selected from the normal distribution with arithmetic mean 0 and standard deviation 1 (these values can also be changed using the` mean` and `sd` parameters). If we want, we can invoke this function using the `package_name::function_name(parameters)` syntax.
+
+***
+
+## Exercise 6.4 - calling a package function
+
+```{r}
+# create a vector `x` that will have 10 random elements
+# drawn from standard normal distribution
+# use the full name of the `rnorm` function of the` stats` package
+x <- stats::rnorm(10)
+
+# round the elements of vector `x` to two decimal places
+# use the full name of the `round` function from the `base` package
+x <- base::round(x, 2)
+
+# print vector `x`
+x
+```
+
+***
+
+
+Although this is a syntactically correct way of calling a function, R allows us to exclude package names and simply name the function directly.
+
+***
+## Exercise 6.5 - removing the package reference
+
+```{r}
+# create vector `y` by the same principle as vector x
+# use only one line of code
+# use the function names without the name of the package
+y <- round(rnorm(10), 2)
+  
+# print vector `y`
+y
+```
+
+
+
+***
+
+## Environments
+
+As already mentioned, work in R is usually related to managing different objects. In order to manage these objects at all, we need mechanisms to help us refer to the objects concerned. In R (and other programming languages), this is called "binding". When we create the `x` variable of the numeric type and assign it the number `5`, we actually created a (one-element) numerical vector and created a reference to that data  using a character string `x`, which we can then use to acquire that data.
+
+Therefore, when we want to access some variables, R must search its internal "records" which state whichvariables currently exist, of what types they are and how to access them. In order to find the variable, R uses a mechanism called "lexical scoping"" based on the concept of "environments".
+
+The "environment" is often referred to as a "bag of names". It helps us to logically group the names of the objects we use and to help R find the name in other environments if the variable does not exist in the current environment. The latter is enabled with the help of a fact that (almost) each environment has a parent environment. This system of parent-environment links creates a kind of "environment hierarchy", often referred to as "search path"; R, looking for the default variable name, searches the environments "upwards" until it finds the first appearance of the requested name or encounters an the final environment (the so-called "empty environment" ). What is interesting is the fact that the environment itself is an object - we can create a reference to it, send it to functions, and so on.
+
+The "default" environment in which we work and in which we create new variables is the so-called  "global environment", or `.GlobalEnv` (watch out for the dot!). It is at the bottom of the  environment hierarchy. We can get a reference to it via the mentioned name of the variable, or by using the `globalenv()` function.
+
+***
+
+## Exercise 6.6 - global environment
+
+```{r}
+# create a variable `e` which refers to the global environment
+e <- globalenv()
+
+# print `e`
+e
+
+# create a variable `x` and assign the number `5` to it
+x <- 5
+
+# execute the `ls` function, without parameters
+ls()
+
+# execute the `ls` function with `e` as a parameter
+ls(e)
+
+# print `x`
+x
+
+# print `e$x` (notice the list syntax!)
+e$x
+```
+
+
+
+***
+
+
+From the last example, we can see that the environment also references itself, so this is completely correct (although unnecessarily complicated) syntax for printing the `x` variable:
+
+```{r, eval = F}
+e$e$e$e$e$e$e$e$e$e$e$e$e$e$e$e$e$e$e$e$x
+```
+
+
+The environments are somewhat similar to lists, which are in fact a kind of "encapsulation" of a number of objects in a unique structure. The most important differences between the environment and the list are:
+
+- the order of elements in the environment is irrelevant
+- the environment (as a rule) has a link to the environment of the parent
+
+Let's look at who the parent environment is to the global environment with the help of `parent.env` function.
+
+***
+## Exercise 6.7 - parent environments
+
+```{r}
+# print out the parent environment of the global environment and explain the result
+parent.env(globalenv())
+```
+
+
+
+***
+
+Slightly unexpectedly, the parent of the global environment is the last loaded package! This is not really unusual - the global environment has a "priority" in referencing the variable, but immediately below it are the objects and functions that we last loaded into the work environment (which suits us as the assumption holds that the "most recent" package is the one that we intend to use  immediately). In other words, by loading a package, the new package is always "set" between the global environment and the package that was previously loaded last. When we called `search` function, we actually got the hierarchy of environments that represented loaded packages. This environmenthierarchy is the already mentioned "search path".
+
+With the help of `parent.env`, we can determine what environment the environment will consider as a parent. In this way, we can make our own hierarchy of environments. Furthermore, the variables we create do not have to use references from the global environment (which is actually the basic function of the operator `<-`), we can store them in any environment we want, but we need to use `assign` and `get`, or a combination of operators `$` and `<-`.
+
+Look at the example below to get the feeling how custom environments work.
+
+***
+
+
+```{r}
+# example - a small hierarchy of custom environments
+
+e2 <- new.env()
+e3 <- new.env()
+
+#  hierarchy `e3` --> `e2` --> `e` (global)
+parent.env(e2) <- e       
+parent.env(e3) <- e2
+
+# creating variable `x` in `e2`
+assign("x", 5, e2)     #  or e2$x <- 5   
+
+# checking if there is an `x` in `e2`
+exists("x", e2)
+
+# printing `x` from `e2`
+get("x", e2)       # or e2$x
+```
+
+
+***
+
+Why use the environment in practice? The environment is a convenient way of "wrapping" a set of variables that we can then send together in a function - which is especially convenient if the relevant variables refer to some large datasets. As we will see in the next lesson, R does not support the so-called *call-by-reference* principle when sending objects to the function, but rather uses the so-called  *copy-on-modify * mechanism. This means that the **function will use the reference to the original object sent to it as a parameter up to the command that will try to change the object**; at that moment a copy of that object is created and all the changes pertain to the copy. This can lead to a significant slowdown of programs with developers who are not familiar with this fact and who, for example, program a function that transforms the data frame. If the function instead of referring to the data frame sends a reference to the environment in which the "wrapped" frame is copied, then copying the variable will not occur because the environment is the only object for which *copy-on-modify* is not valid. We note that the special case of this method is to "send" the global environment to a function, which is actually reduced to the use of a "global variable" - something that is often avoided in other programming languages, but is not that uncommon in R.
+
+Finally, let's demonstrate the `attach` function that analysts often use to speed up the analysis process, but which can cause problems if we are not careful with its use. This function will insert the data frame directly into the search path to allow us "easier" access to variables, and with potential accidental side effects. Let's take a look at this example.
+
+***
+
+## Exercise 6.8 - the `attach` function
+
+```{r}
+cities <- data.frame( zipcode = c(10000, 51000, 21000, 31000, 2000),
+         cityName = c("Zagreb", "Rijeka", "Split", "Osijek", "Dubrovnik"),
+         avgSalary = c(6359., 5418., 5170., 4892., 5348.),
+         population = c(790017, 128384, 167121, 84104, 28434),
+         tax = c(18, 15, 10, 13, 10))
+
+# execute function `attach` with `cities` as parameter
+# do this only once!
+attach(cities)
+
+# print the search path and comment on the result
+search()
+cat("-------------------------\n")    
+
+# print the `zipcode` variable 
+zipcode
+cat("-------------------------\n")    
+
+# change the third element from the `tax` variable to 12
+tax[3] <- 12
+
+# print `cities`
+cities
+cat("-------------------------\n")    
+
+# execute the `ls` function
+ls()
+cat("-------------------------\n")    
+
+# use the `detach` function to remove `cities` from the search path
+detach(cities)
+```
+
+
+***
+
+Let's explain what happened in the example above. With the `attach` function, the `cities` data frame became a "mini-environment", i.e. its columns became available within the search path. The obvious benefit of this is that we can refer to the columns directly, without referencing the original data frame and operator `$`. But this seemingly practical trick has hidden traps - first, if the column names match those of the global environment, then those columns will not be visible (we will be notified of this with an adequate warning). Second - and much more problematic - if we try to change the column of the data frame by directly referencing it, R will prevent it and will quietly apply the *copy-on-modify* principle by creating a new, global variable that will be a copy of the referenced column. An inattentive analyst can miss the fact that the changes are not reflected at the data frame itself, which can have far-reaching consequences.
+
+These potential problems are very widespread among R beginners, so in the R literature it is commonly suggested that the `attach` function is not used unless it is deemed very necessary. For example. <a href ="https://google.github.io/styleguide/Rguide.xml"> Google's R-style  guide</a> says "the error potentials for using the `attach` function are numerous, so avoid it" . If we really want to simplify our code and avoid repeating the name of the data frame every time we refer to one of its columns, it is recommended to use additional packages that are designed to facilitate the management of data frames. These packages will be introduced in some of the next chapters.
+
+***

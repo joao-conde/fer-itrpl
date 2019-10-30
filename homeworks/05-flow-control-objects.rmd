@@ -28,7 +28,7 @@ cities
 
 ### 2. Replace the loops in the next block with equivalent vectorized operations (for the second loop, review the `sum` function documentation).
 
-```{r, eval = F}
+```{r}
 
 # original code
 a <- numeric()
