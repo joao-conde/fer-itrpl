@@ -1,0 +1,321 @@
+
+---
+title: "5 Flow control and objects"
+author: "student"
+date: "24. kolovoz 2017"
+output:
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(results = 'hold')
+```
+
+***
+
+
+## Flow control commands
+
+Under flow control commands we mostly refer to constructs for conditional execution and  so-called "program loops" where the segment of the program is continually executed until (optionally) certain conditions are fulfulled.
+
+### Conditional execution of commands
+
+For conditional execution we use the so-called `if-then` block:
+
+`if (condition) {block} else {block}`
+
+This command is pretty straightforward. In the next exercise we will show how to avoid a relatively common error when writing `if` commands. Try to spot and correct it.
+
+***
+
+## Exercise 5.1 - `if` command
+
+
+```{r, eval = F}
+
+# execute the next conditional execution command
+if (2 > 1) print ("Success!")
+
+
+# find the error in the next `if-else` command and correct it
+if (1 > 2) {
+  print ("Success!")
+} else print ("Fail!")
+
+```
+
+
+***
+
+The readers who are programming in C or Java will recognize the so-called "ternary operator" that actually represents a compact version of the `if-else` block:
+
+```{r, eval = F}
+x = (a <b) ? c: d # not R language!
+```
+
+
+The role of this operator in R is performed by the `ifelse` function.
+
+***
+
+## Exercise 5.2 - `ifelse` command
+
+
+```{r, eval = F}
+a <- 1:3
+b <- c(0, 2, 4)
+
+# what does the vector `x` look like after executing the following command?
+# Think about the answer and then check the correctness of the solution
+
+x <- ifelse (a < b, 2, 5)
+
+# A: The command assigns x with a vector resulting of the comparison element by element of the a and b vectors.
+# Each of the resulting x elements will be either 2 or 5, if the element in a is smaller than b or otherwise, respectively.
+x
+```
+
+
+
+
+Note that the `ifelse` function is vectorized, which is why it is particularly suitable for creating new columns of data frames derived from certain conditions related to the existing columns.
+
+***
+
+## Program Loops
+
+In the programming language R we have three types of loops:
+
+- `repeat` - infinite loop
+- `while` - loop with checking conditions at the beginning
+- `for` - iterator loop ("loop with known number of repetitions")
+
+### Loop `repeat`
+
+`repeat` is the simplest loop. It has the following syntax:
+
+`repeat {block}`
+
+It is an "infinite" loop where, once the block is completed, it is re-executed again so on. The only way to exit this loop is to use the `break` command. In addition to this we have a `next` command that will skip the rest of the block, but it will not exit loop.
+
+Let's see how this loop works in the next exercise.
+
+## Exercise 5.3 - `repeat` loop
+
+
+```{r, eval = F}
+# answer the following questions before running the next block:
+
+# - will the loop run indefinitely?
+# A: No. i starts with the value of 1 and is incremented by one each iteration, so eventually i will be equal to 11. Because 11 > 10, the cycle will break in the line 'if (i > 10) break'
+
+# - what will be printed on the screen?
+# A: The odd numbers from [1, 10]
+
+i <- 1
+repeat {
+    i <- i + 1
+    if (i %% 2 == 0) next
+    print (i)
+    if (i> 10) break
+}
+
+
+```
+
+
+We often know the exact condition for exiting the loop and want to place it in a clearly visible place so it is not "hidden" in the body of the loop. Hence, we may find the `while` loop to be more useful.
+
+
+
+### `while` loop
+
+`while` represents the "purest" form of the program loop whose syntax literally means "while the condition is met, repeat the specified code":
+
+`while (condition) {block}`
+
+## Exercise 5.4 - `while` loop
+
+
+```{r, eval = F}
+# add the loop condition so it loops
+# exactly 7 times
+
+i <- 1
+while (i <= 7) {
+  print(i)
+  i <- i + 1
+}
+
+
+```
+
+
+With this loop we have to make sure that in a certain iteration conditions for exiting will be met, otherwise it also becomes an "infinite" loop. We are also free to use the `next` and` break` commands, which have the same function as in the `repeat` loop.
+
+
+
+### `for` loop
+
+A `for` loop or "iterator loop" serves to easily "walk" over a data structure (most commonly vector), getting element by element and doing something with it. It uses the `for` keyword, the name of the new iterator variable, the keyword` in`, and the vector whose values are taken one by one and used within the loop (note that the specified `in` is not the same as the `%in%` operator which checks if some element is contained in the vector!). The syntax of this loop is as follows:
+
+`for (i in v) {do something with i}`
+
+Note that here the variable `i` is not a "counter" - in every loop iteration it becomes the value of the element we come across. If we want to iterate by the indexes, not by the elements themselves, then we can use the construct `for (i in 1:length (a))`.
+
+
+## Exercise 5.5 - `for` loop
+
+```{r, eval = F}
+a <- seq(-10, 10, 4)
+
+# print vector elements of `a` one by one
+# with the help of `for` loop 
+# access the elements directly
+for(el in a) print(el)
+
+cat("----------\n")
+# do the same, but iterate by indexes
+for(i in 1:length(a)) print(a[i])
+```
+
+
+
+Notice that the second way is better if you want to change the vector elements or need information on where the element is located in the original vector.
+
+***
+
+
+Now that now that we have learned the loop syntax, it is important to emphasize one fact - **in programming language R, it is generally not recommended to use program loops**. Although this may initially seem unexpected and somewhat shocking, the reason is simple - R language is designed to work by the declarative "all at once" principle. We have already seen that the principle of vectorization and recycling effectively perform jobs that would require a loop in other programming languages, and in the chapters that follow, we will see that R also offers many other constructs that avoid explicit code repetition with the requirement of a declarative syntax that automatically performs it.
+
+For example, the following example is syntactically correct:
+
+```{r, eval = F}
+# example of unnecessary loop usage
+a <- 1:5
+b <- 6:10
+c <- numeric()
+
+for (i in 1:length (a)) c[i] <- a[i] + b[i]
+
+```
+
+
+but probably works slower and is much less readable than:
+
+```{r}
+# R syntax
+a <- 1:5
+b <- 6:10
+
+c <- a + b
+```
+
+
+All of this does not mean that we should not use loops in R, but that their use should be accompanied by an additional consideration of whether the loop is really needed and whether there is an alternative syntax that completes the same task but can be written declaratively (and is potentially faster, since many routines in R are implemented in language C). Early adoption of the "R" mode of thinking will result in long-term benefits that will be reflected in a more compact, cleaner, and often more effective program code.
+
+
+***
+
+## Object models in R language
+
+R is designed as an object-oriented language, together with the mechanisms that the object-oriented paradigm requires - *encapsulation* (enveloping various attributes into a common entity), *polymorphism* (using the same function over different objects results in different operations depending on the nature of the object) and *inheritance* (creating new objects from the existing ones by expanding them with additional elements).
+
+R has taken its initial way of object modeling  from the S language and therefore such objects are known as "S3 objects" (according to the S language version from which they were originally taken). This object model, which we will learn very soon, is actually very unconventional and simple but also as such fairly suitable for using in R, it being primarily a domain-oriented language. With the increasing number of programmersin the R community, the pressure to bring support to objects that will be more similar to the way they work in the other programming languages has increased, in order to bring better robustness in design and management of objects.
+
+All this has led to the fact that today we have formally four types of objects in the programming language R:
+
+- "base"" classes - basic R elements (functions, vectors, data frames)
+- S3 objects - principle of object design taken from S language (version 3)
+- S4 objects - a more formal and rigorous way of creating objects approaching standard object-oriented mechanisms from other languages
+- RC objects (*reference classes*) - the most recent way of creating objects (introduced in version 2.12) that replicates the "classical" object-oriented principles based on the exchange of messages
+
+The existence of three different models of defining objects (we can ignore the basic since we can not formally expand it with new objects) can seem disheartening - is it necessary to learn all three models? How to distinguish them? Which one to choose? However, despite the fact that the story about the object nature of R during its development is (unnecessarily) complicated, the good news is that for most needs, it's quite enough to learn how the S3 model works, which is also the simplest. A large number of popular R packages use only S3 classes and it is possible to work in language R for a very long time without meeting the need for learning S4 or RC models. For this reason, we will focus on the S3 objects only (readers who want more information on other models can look at a very good book called *Advanced R*, by the author Hadley Wickham, which deals, among other things, with the object models in R).
+
+***
+
+### Overview of the S3 object model
+
+As already mentioned, S3 objects are actually taken from S programming language and represent a relatively primitive implementation of the concept of "object", as far as expectations go regarding standard methods of object creation. **S3 object is actually just a list with the additional `class` attribute**.
+
+
+```{r}
+# we are creating a new object of a class `Person`
+pero <- list(oib = "12345678", lastname = "Peric", weight = 78)
+class(pero) <- "Person"
+
+```
+
+
+And that's it! Notice that we do not have a formally defined "template" of the class that we instance in the object as is the established practice in other programming languages. For S3 objects, we simply create a list and then declare that that list is an object of a certain class, although the structure of that class is only implied by the object's appearance (and does not have to match the structure of another object declared to belong to the same class).
+
+Of course, such a convenient way of constructing objects is not advisable so we recommend that we in practice do not construct the class "manually", but rather to write and use a special constructor function whose parameters will actually define the object's appearance (this will be learned in the lesson about creating user-defined functions)
+
+What about inheritance, where class-child inherits properties from its parent?
+
+R enables inheritance, but also in a very informal and relatively trivial way. Rather than just listing a single "class" name with the `class` attribute, we create a character vector where the first element will be the class name, and the other elements will be parent classes, sorted by 'importance'. For example, if we created a new `mate` object of class `Employee` which inherits the class `Person`, then it is enough to do the following:
+
+
+```{r, eval = F}
+mate <- list(oib = "12345678", lastname = "Peric", weight = 78, yearEmpl = 2001)
+class(mate) <- c ("Employee", "Person")
+```
+
+
+We note that all the attribute inheritance work must be done "manually", that is, we have to make sure that the parent has the attributes of the `Person` class.
+
+
+
+### Generic functions
+
+Looking at the above way of the object design, it is legitimate to ask an additional question - where are the methods? As we know, standard object-oriented principles assume the encapsulation of the attribute but also the methods in the form of an object. Here is the basic difference between the S3 object and the "standard" objects from the other programming languages - **in S3 object model the method is defined outside of the object, in the form of so-called generic functions**.
+
+Why is that so? The idea is the following: when working with objects, the user (programmer, analyst) often calls the same functions (eg "print", "draw", "summary description") over objects of different types. The function of the same name will work differently depending on the object over which it is called - hence the name **generic function**. So, the `print` function always results in some kind of print, but how the printing actually works depends on the object we are printing.
+
+This way of designing an object can be extremely unconventional, but the fact is that the call of a generic function makes it look far more intuitive, especially for users who do not have a big experience in programming. Specifically, let's compare the command:
+
+```{r, eval = F}
+start(car, speed = 20)
+```
+
+with the command:
+
+
+```{r, eval = F}
+car.start(speed = 20)
+```
+
+By reading the first command, the car is perceived as an "object" (in terms of word service in a sentence), that is, something we do "to" this object. The second command sets the car as a subject, which is common practice in object-oriented languages, but is not in line with the general understanding of doing things to some objects.
+
+In working with programming language R we often do "similar" tasks over different objects - we print their contents, draw them on a graph, look for some concise details of them, etc. For this reason, and the fact that R is often interactive, R is designed in a way that we think **what** we want to do instead of asking ourselves **where**  the function we want to call is. If we want to print an object, it is logical to just forward it to the `print` function ,if we want to draw it the `plot` function, ans if we want to summarize it - the `summary` function.
+
+How does a single function "know" what to do with an object? The answer is simple - the generic function is just "interface" to the "right" function we call, and the logic to find the right function is trivial - if the generic name of the function is `genFun`, and the name of the object class is `className`, the function actually being called is `genFun.className`. If no such function exists, the function `genFun.default` is called.
+
+This can easily be seen in the next exercise.
+
+
+## Exercise 5.6 - generic functions
+
+```{r}
+# print the `summary` function (only the function name!)
+summary
+cat("---------\n")
+# print a function that is actually being called when you call
+# the `summary` function of the `factor` class object
+summary.factor
+```
+
+By understanding the principle of generic functions, we have completed a picture of S3 objects. The most important thing we have to adopt is that in this model functions are not part of the object itself, they are defined separately, and the link between the object and its "method" is only in the function name by which R "links" the generic function and that object. Although this principle is primitive and vulnerable to faults in the hands of inattentive developers, it is easy to use and very effective. Finally, let's note that this approach is not entirely unique to the language R - similar principles can be found in other programming languages. It is specific to R in that the principle is used openly and almost exclusively.
+
+Objects and generic functions will be re-visited when we learn to create our own functions, which will enable us to create both the constructors of our objects and their generic functions.
+
+### Conclusion on S3 objects
+
+In short, the conclusions about S3 objects can be as follows:
+
+- S3 objects function in **in a simple, informal way** - they are simply lists with the arbitrary value of `class` attributes
+- Much of this is left to **the responsibility of the programmer**
+- the S3 object methods are not encapsulated within the objects, but are designed "out of" objects in the form of generic functions
+- S3 objects **are not suitable for complex object models** due to heavy model maintenance and large potential of errors

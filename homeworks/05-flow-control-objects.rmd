@@ -1,0 +1,65 @@
+---
+title: "Homework5 - Flow control and objects"
+author: "João Conde"
+date: "30/10/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Exercises
+
+### 1. Create a data frame with the following command.
+Add the "taxLevel" which will be the ordinal factor variable with the levels "small", "medium" and "high" depending on whether the percentage of tax is strictly smaller than 12, between 12 and 15 or strictly greater than 15. Use the `ifelse` command.
+
+```{r}
+cities <- data.frame(zipcode = c(10000, 51000, 21000, 31000, 2000),
+         cityName = c("Zagreb", "Rijeka", "Split", "Osijek", "Dubrovnik"),
+         cityTax= c(18, 15, 10, 13, 10))
+
+cities$taxLevel <- ifelse(cities$cityTax < 12, "small", ifelse(cities$cityTax <= 15, "medium", "high"))
+cities$taxLevel <- factor(cities$taxLevel)
+cities
+```
+
+
+### 2. Replace the loops in the next block with equivalent vectorized operations (for the second loop, review the `sum` function documentation).
+
+```{r, eval = F}
+
+# original code
+a <- numeric()
+i <- 1
+
+while (i <= 100) {
+  a <- c(a, i)
+  i <- i + 1
+}
+
+total <- 0
+
+for (i in a) {
+  if (i %% 2 == 0) total <- total + i * i
+}
+
+print (total)
+
+# vectorized operations
+a <- 1:100
+a <- a[a %% 2 == 0]
+sum(a * a)
+```
+
+### 3. Create a class object `Block` with the attributes `height`, `width` and `depth` equal to` 10`, `20` and `30` respectively.
+
+```{r}
+block <- list(height=10, width=20, depth=30)
+class(block) <- "Block"
+block
+```
+
+***
+
