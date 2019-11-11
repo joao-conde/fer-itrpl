@@ -1,0 +1,384 @@
+
+---
+title: "7 User defined functions"
+author: "student"
+date: "24. kolovoz 2017"
+output:
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(results = 'hold')
+```
+
+***
+
+## How to define a function
+
+In the general case, the definition of a new function looks like this:
+
+```{r,eval = F}
+function_name <- function(input arguments) {
+    function_body
+    return_statement
+}
+```
+
+
+***
+
+## Exercise 7.1 - first user defined function
+
+
+```{r}
+# Write the function `parallelMax` which requires two numeric vectors as input
+# and returns a vector of the same size containing the larger 
+# between two corresponding elements of the original vectors
+# if one or both vectors aren't numeric or aren't the same size
+# the function must throw an error
+# do not use loops!
+parallelMax <- function(v1, v2){
+  stopifnot(is.numeric(v1) && is.numeric(v2) && length(v1) == length(v2));
+  ifelse(v1 > v2, v1, v2)
+}
+
+# ON THE CONSOLE, execute this new function over the following vector pairs 
+# c(T, F, T) i c(1, 2, 3)
+#parallelMax(c(T, F, T), c(1, 2, 3))
+
+# c(1, 2, 3, 4) i c(5, 6, 7)
+#parallelMax(c(1, 2, 3, 4), c(5, 6, 7))
+
+# c(1, 2, 3) i c(0, 4, 2)
+#parallelMax(c(1, 2, 3), c(0, 4, 2))
+
+```
+
+
+***
+
+## Exercise 7.2 - function parameters
+
+```{r, eval = F}
+printABC <- function(a, b, c) {
+   print(paste("A:", a, "B:", b, "C:", c))   
+}
+
+# think before executing - what will be printed with the following command? 
+printABC(1, a = 2, 3)
+
+# 'a' will be first resolved and set to 2 since it was a named parameter.
+# The rest will be solved in order: first is a '1' so 'b' is set to '1' and finally 'c' to '3'.
+# So, it will print: "A: 2 B: 1 C: 3"
+```
+
+
+***
+
+## Exercise 7.3 - function with an arbitrary number of parameters
+
+```{r}
+printParams <- function(...) {
+   params <- list(...)
+   for (p in params) print(p)
+}
+
+# call the above function with any random parameters
+printParams(1,"a","A long string.......", 2048, c(1,2,3,4), c(T,F,T), data.frame(1:2, c(T,F)))
+
+```
+
+
+
+***
+
+Finally, let's recall the chapter in which we talked about S3 objects and the fact that R does not have a formal system for creating and using objects, but it is recommended that you use a separate constructor function that replaces the "manual" matching of the object and the declaration of its class. Now that we know how to create our own functions, we can look at how a potential constructor of the 'Person' class would look.
+
+```{r}
+# constructor of the `Person` class
+
+Person <- function(id, surname, weight) {
+
+    stopifnot(is.character(id))
+    stopifnot(is.character(surname))
+    stopifnot(is.numeric(weight) && weight > 0)
+
+    p <- list(id = id, surname = surname, weight = weight)
+    class(p) <- "Person"
+
+    p
+}
+```
+
+
+
+Let's try to create a new object of the `Person` class with the help of this constructor.
+
+***
+
+## Exercise 7.4 - constructor function
+
+```{r}
+# create `john`, a `Person` with the following characeristics:
+# id: 1357135713, surname: Watson, weight: 76
+john <- Person("1357135713", "Watson", 76)
+
+# print `john`
+john
+```
+
+
+***
+
+
+
+### The "copy-on-modify" principle 
+
+One of the more common questions raised when learning a new programming language is whether the functions work in "call-by-value" or "call-by-reference" mode. The difference is basically whether the function may change the content of the variables sent at the place of the formal argument or not;  *call-by-value* principle forward only copies of original arguments. On the other hand, the *call-by-reference* principle makes it so the function receives "references" of the original variables, i.e. it behaves as if the original variables were passed to the function and all changes to them would be reflected in the calling function or program.
+
+The language R uses a hybrid principle known as *copy-on-modify*. With this principle, references are forwarded to the function, which allows us to transmit "large" variables without fear of unnecessary copying. But this is only valid if the function does not change the value of the resulting variables - at the moment when the function attempts to make any changes, copying the variable is carried out and the function continues to work on the copy. Because of this it is said that R as such does not support *call-by-reference* (one reason for introducing "reference class" objects, i.e. "RC object model" into language R, is precisely the introduction of this principle).
+
+Let's check the above statements in a following example.
+
+***
+
+```{r}
+# attempt to change variables from the calling environment
+
+f <- function() {
+    cat("x inside function:", x, "\n")
+    x <- x + 1
+    cat("x after change:", x, "\n")
+}
+
+x <- 5
+f()
+cat("x after return:", x, "\n")
+
+
+```
+
+***
+
+## Exercise 7.5 - changing global environment variables
+
+```{r}
+# implement function `f` which gets a reference to the global environment
+# and increases the "outer" `x` by 1
+f <- function() {
+  e <- globalenv()
+  e$x <- e$x + 1
+}
+
+x <- 5
+# call `f` and then print `x`
+f()
+x
+```
+
+
+***
+
+A simpler way of solving the above task would be using the `<<-` operator. This operator's function is to change the variable of the given name that is located somewhere in the search path. R will follow the search path, and change the first occurrence of the specified variable. If the variable of this name does not exist anywhere in the search path, R will create a new variable in the first environment above the environment of the function.
+
+```{r}
+# operator `<<-`
+f <- function(x) {
+    x <<- 7
+    x <- 6
+}
+
+x <- 5
+f()
+x
+```
+
+
+
+
+### Function as an object
+
+We have already said that R has good support for the so-called "functional programming" which represents a programming paradigm that puts emphasis on designing functions without reliance on objects with interchangeable states. One of the characteristics of such languages are "first class functions", which means that the language supports the definition of functions in such a way that they are equal objects to all other types of objects - they can be stored in a variable, used as an input argument of another function or as a return value, stored in other data structures, etc. 
+
+
+
+```{r, eval = F}
+sum2 <- sum
+
+sum2(1:10)  # same as sum(1:10)
+
+```
+
+
+This is easiest to understand in a way that the function is simply an "callable variable", whereby the "call" refers to the use of a syntax that includes a reference to the function and input arguments framed in parentheses, which will return some value after execution in the R environment.
+
+***
+
+The function can also be a return value from another function.
+
+```{r}
+funcCreator <- function() {
+    f <- function(x) x + 1
+    return(f)
+}
+
+newFunc <- funcCreator() # we get the "add one" function
+newFunc(5)  
+```
+
+
+The function simply creats a new function and returns it to the calling program as it would have done with any other object. The return value is stored in the variable that is now "callable" - if we add brackets and parameters it will be executed in the way it is defined within the function that created it.
+
+Note that we could use the fact that the function returns the result of the last expression and define the function even shorter:
+
+```{r}
+# shorter definition
+funcCreator <- function() {
+    function(x) x + 1
+}
+```
+
+These functions are often referred to as "factories" or "generators" of functions, and in contrast to the above example, in practice, the function generator often receives some parameters that determine how the returned function will behave.
+
+Try to create a function factory that returns the multiplication functions using a pre-set parameter.
+
+***
+
+## Exercise 7.6 - function factory
+
+```{r}
+# create the `multiplicationFactory` function that creates 
+# multiplication functions by the pre-set constant
+multiplicationFactory <- function(constant){
+  function(x) x * constant
+}
+
+# use the above function to create the `times2` function
+# which doubles the received number
+times2 <- multiplicationFactory(2)
+
+# call the `times2` function with parameter 3 and print out the result
+times2(3)
+```
+
+
+
+***
+
+If we define a function, and do not bind it to some variable, then we created the so-called "anonymous function".
+
+```{r, eval = F}
+# anonymous function
+function(x) x * x 
+```
+
+
+*** 
+
+
+```{r}
+# calling the anonymous function
+(function(x) x + 1)(2)
+```
+
+***
+
+### Generic functions
+
+We have already mentioned generic functions in the chapter on objects, but let's briefly recall what they are all about. The programming language R is not based on the so-called "message exchange principle" of the object-oriented languages, where, for example, the drawing of the graph might be performed like this:
+
+```{r, eval = F}
+# the usual OOP principle invokes object methods
+graph.draw()
+```
+
+but like this:
+
+```{r, eval = F}
+# R just calls the method unto an object
+draw(graph)
+```
+
+
+In the first case, a graph is an object that implements a special drawing method, and we have to call it in order to get the required graph image. In the second, there is an "external" function that "knows" how to draw a graph. This function is called a "generic function".
+
+***
+
+
+
+## Exercise 7.7 - new generic function
+
+```{r}
+peter <- Person(id = "12345678", surname = "Parker", weight = 78)
+
+# create a new generic `infoAbout` function using the `UseMethod` function
+infoAbout <- function(x) UseMethod("infoAbout")
+
+# implement a `infoAbout.Person` function which takes a `Person`
+# and writes the following on screen
+# ID: <id>, surname: <surname>, weight: <weight>
+# use the `paste` function to prepare the printout
+# and `cat` to put it on screen
+infoAbout.Person <- function(person){
+  info <- paste("ID:", person$id, ", surname:", person$surname, ", weight:", person$weight)
+  cat(info)
+}
+
+# implement a `infoAbout.default` function
+# which simply fowards the input parameter to the `cat` function
+infoAbout.default <- function(generic) cat(generic)
+
+# call `infoAbout` with `peter` as parameter
+infoAbout(peter)
+cat("\n------------------------------------\n")
+# call `infoAbout` with `1:5` as parameter
+infoAbout(1:5)
+```
+
+
+
+
+***
+
+Of course, we did not necessarily have to create our own function to get the "print" functionality for our new class - it would probably be better to use already existing generic functions such as `print` or `cat`.
+
+***
+
+## Exercise 7.8 - augmenting the existing generic functions
+
+```{r}
+# make sure `print` is a generic function
+# (print out its source code by referencing its name)
+print
+
+# augment the `print` function so it allows pretty printing
+# of the `Person` class
+# (you may use the already created `infoAbout.Person` class)
+print.Person <- infoAbout.Person
+
+# call `print` with `peter` as parameter (or try the autoprint)
+peter
+```
+
+
+***
+
+
+Finally, we demonstrate the ability of R to list all the currently known implementations of a generic method. To do this we simply use the `methods` function to which we pass the name of the method concerned. With the same function we can also check which generic functions implementations exist for a particular class. For this we use the `class` parameter to which we are passing the class name for which we are interested in finding generic functions implemented for it.
+
+***
+
+## Exercise 7.9 -  `methods` function
+
+```{r}
+# list all implementations of the `summary` function
+methods(summary)
+cat("-----------------------\n")
+
+# check with generic function implementations exist for the `factor` class
+methods(class = "factor")
+```
+
+***
