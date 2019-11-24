@@ -1,0 +1,303 @@
+---
+title: "8 Apply family of functions"
+author: "student"
+date: "24. kolovoz 2017"
+output:
+  html_document: default
+---
+
+***
+
+## What are `apply` functions?
+
+Very often, knowledge of the basics of the language R is reflected by the skill of using the so-called `apply` family of functions, available in the` base` package. These functions are specifically designed to perform repetitive tasks over various data structures, and as such they replace the program logic that would usually be realized in a through program loops. Additionally, these functions typically receive other functions as input arguments and, to a certain extent, encourage the functional programming paradigm.
+
+The family name comes from the fact that these functions commonly have a suffix "apply". Some of the functions from this family are:
+
+- `apply`
+- `lapply`
+- `sapply`
+- `vapply`
+- `tapply`,` mapply`, `rapply` ...
+
+All of these functions work in a similar way - they receive a data set, a function that we want to apply to elements of that set, and optional additional parameters, and as the output give a set of function results, most often "packaged" in an appropriate format. The difference is mainly in the types of input and output arguments, as well as specific details about the implementation of the function itself and/or the way results are prepared.
+
+This family of functions is best learned through examples. We will begin with the "basic" function - `apply`.
+
+
+## The `apply` function
+
+The `apply` function is the only one that literally shares the name with the family of these functions. It is intended to work with **matrices** (actually with arrays, but since it is relatively rare to use data structures that have more than two dimensions, here we will focus only on matrices).
+
+The command syntax is as follows:
+
+```{r, eval = F}
+result <- apply( <matrix>, <rows (1) or columns (2)>, <function_name> )
+```
+
+Or, described in words, to implement the `apply` function, we:
+
+- choose a matrix
+- decide whether to "cut it" by rows or columns
+- declare which function we want applied to each row (or column)
+
+Depending on how function works, as a result we get a matrix or (which is a more frequent case) a vector.
+
+Let's try to use this function in a concrete example.
+
+***
+
+## Exercise 8.1 - the `apply` function
+
+
+```{r}
+m <- matrix(1:9, nrow = 3, ncol = 3, byrow = TRUE)
+
+# print matrix `m`
+m
+cat("------------\n") 
+
+# use the `apply` function to calculate
+# and print the column sums of the `m` matrix
+apply(m, 2, sum)
+cat("------------\n") 
+
+# use the `apply` function to calculate
+# and print the multiplicaton of row elements 
+# from the `m` matrix 
+apply(m, 1, prod)
+```
+
+
+***
+
+If we want to perform a custom task to the rows/columns, we often use an anonymous function, for example:
+
+```{r, eval = F}
+apply(m, 1, function(x) x[1])   # return the first element of each row
+```
+
+***
+
+## Exercise 8.2 - the `apply` function and anonymous functions
+
+
+```{r}
+# for each row of `m` calculate the natural logarithm
+# of the sum of row elements
+# rounded to 2 decimals
+# use the `apply` function
+apply(m, 1, function(x) round(log(sum(x)), 2))
+```
+
+
+***
+
+Let's repeat - `apply` (and related functions) implicitly * disassembles the input data structure into elements*. In the examples above, these elements - rows or columns - are actually numeric vectors. The argument `x` received by an anonymous function is exactly that vector, or, better said *each of these vectors* that are sent one by one. *The results of the function are "remembered" and "packed"* into the final result.
+
+Let's try to program the last example without using the `apply` function.
+
+***
+
+## Exercise 8.3 - loop as the alternative to the `apply` function
+
+
+```{r}
+# for each row of `m` calculate the natural logarithm
+# of the sum of row elements
+# rounded to 2 decimals
+# use the for program loop
+result <- numeric(nrow(m))
+for(i in 1:nrow(m)) result[i] <- round(log(sum(m[i,])), 2)
+result
+
+```
+
+
+***
+
+What if we want to send to the `apply` function a function which needs several parameters? For example, let's say that instead of the upper function that extracts the first line element we want a function with two parameters - the first a vector (matrix row or column), and the second an integer that indicates the index of the element to extract. The answer is simple - just add additional parameters at the end of the function call.
+
+```{r, eval = F}
+# apply function and input function with multiple parameters
+apply(m, 1, function(x,y) x[y], 2)  # second element of each row
+```
+
+Finally, it should be noted that for similar processing of data in the matrix form, we do not necessarily need to use `apply` - many popular operations such as adding row or column elements, calculating the average of the elements of the rows and columns, and the like. This has already been implemented through functions such as `rowSums`,` colSums`, `rowMeans`,` colMeans` and the like. They are easier to use, but specialized - for more flexibility, the most common option is `apply`.
+
+
+***
+
+## The `lapply`, `sapply` and `vapply` functions
+
+The name of the `lapply` function comes from *list apply* - i.e. **apply the function to the elements of lists**. To put simply - it is a function that will receive the **list and a function** as the input arguments, apply the functions to **each individual list element** and return again **a new list** as a result.
+
+***
+
+## Exercise 8.4 - the `lapply` function
+
+
+```{r}
+l <- list(a = 1:3, b = rep(c(T, F), 10), c = LETTERS)
+
+# use the `lapply` function to calculate the length (number of elements)
+# of each element of the `l` list
+lapply(l, length)
+
+```
+
+
+***
+
+Just like with the `apply` function, for the` lapply` function, we often use anonymous functions as a parameter. The following task has no special practical use, but it will help us understand the functionality of the `lapply` function in combination with a slightly more complex anonymous function.
+
+***
+
+## Exercise 8.5 - the `lapply` function and anonymous functions
+
+
+```{r}
+# process the elements of the `l 'list as follows:
+
+# - Calculate the mean value if it is a numerical vector
+# - count the values of TRUE if it is a logical vector
+# - calculate the length of the vector for all other cases
+
+# use the `lapply` function and an anonymous function
+# do not forget that anonymous function can also use blocks!
+lapply(l, function(x){
+  if(is.numeric(x)) mean(x)
+  else if(is.logical(x)) length(x[x])
+  else length(x)
+})
+```
+
+***
+
+The `lapply` function is essentially quite simple to use and is very popular due to this fact. But once we use it for a while, we can find it irritating that t it always returns the list as a result, although some other data structure would be more suitable for us -  for example a vector, especially if the resulting list has just simple numbers as elements. For this reason, R offers the `unlist` function to simplify the list to a vector.
+
+***
+
+## Exercise 8.6 - the `unlist` function
+
+
+```{r}
+
+l <- list(a = 1:10, b = 10:20, c = 100:200)
+
+# calculate the mean value of the elements of the `l` list
+# print the results as a numeric vector
+# use `lapply` and `unlist`
+unlist(lapply(l, mean))
+```
+
+***
+
+The displayed combination of `lapply` and` unlist` will give us as a result a one-dimensional vector, which in many cases is what we want. But sometimes some other data structure would suit us - for example, a matrix. In this case we need an additional step in transforming a one-dimensional vector into a matrix using the `matrix` function, with the number of rows and columns being explicitly assigned.
+
+The question may arise - why is `lapply` not able to check the structure of the result it has created and determine the optimal data structure for formatting it (vector, matrix, or list)? That's exactly the idea behind the `sapply` function, or *simplified list apply*. This function first performs `lapply` internally, and then simplifies the result to a vector, matrix or array, depending on the characteristics of the results obtained.
+
+***
+
+## Exercise 8.7 - the `sapply` function
+
+
+```{r}
+
+l <- list(a = 1:10, b = 10:20, c = 100:200)
+
+# calculate the median of elements of the `l` list
+# and collect the results in a numeric vector
+# use the `sapply` function
+sapply(l, median)
+cat("------------\n")
+
+# extract the first and last element of each of the elements of the `l` list
+# use `sapply` and anonymous function
+sapply(l, function(x) c(x[1], x[length(x)]))
+```
+
+***
+
+Note that as a result in the last example, we received a matrix, but that R formed it "by columns". If we wanted a matrix with elements arranged in rows, we can not use `sapply` for this directly, because the matrix is formed internally, without the possibility of forwarding the` byrow = T` parameter. To obtain such a matrix, one option is already mentioned with the combination of `lapply`,` unlist` and `matrix`, or - more simply - transposing the` sapply` results using `t` function (from *transpose*).
+
+***
+
+The `sapply` function is quite popular due to its simplicity and efficiency, so it is relatively often used in interactive analysis. On the other hand, the use of this function in program scripts is not recommended since its result is unpredictable in the general case - e.g. the script can expect a matrix in the continuation of the code, and the `sapply` function, due to the specificity of the input data, returns the vector, which can cause unforeseen results, which is not easy to spot later and diagnose where the error occurred.
+
+If we are developing our own programs in R and want to use `sapply`, then the better choice will be the` vapply` function, which works identically to `sapply`, but uses an additional parameter called `FUN.VALUE` with which we explicitly define what kind of "simplification" we expect. For example. `numeric(3)` means that the result of applying the function to each element of the original list should be a numeric vector of three elements. If the result for any list item differs from the expected one, the function will raise an error.
+
+***
+
+## Exercise 8.8 - the `vapply` function"
+
+
+```{r, eval = F}
+myList <- list(numbers <- c(1:5), 
+               names <- c("Ivo", "Pero", "Ana"), 
+               alphabet <- LETTERS)
+
+
+# think which of the following calls will be successful,
+# and which will throw out the error
+# check the results on the console
+
+vapply(myList, length, FUN.VALUE = numeric(1)) #successful
+vapply(myList, function(x) as.character(c(x[1], x[2])), FUN.VALUE = character(2)) #successful
+vapply(myList, function(x) as.logical(x), FUN.VALUE = character(1)) #throw error due to cast to logical of chars
+
+```
+
+
+
+***
+
+Finally, let's return briefly to `lapply` and consider one important fact - it is intended for use on lists, and **data frames are actually lists**. In other words, the `lapply` function is very handy for processing tabular datasets when we want to apply a particular function to the columns of the data frame.
+
+One of the more frequent operations performed in data analysis is the so-called. "normalization" of the numeric columns of the data frame - i.e. reducing all numerical values to "normal" distribution with the arithmetic mean of 0 and standard deviation of 1. This can be done by reducing each individual value by the arithmetic mean of the column (the `mean` function) and dividing with standard deviation of the column (function `sd`). This is a great way to demonstrate the use of `lapply` with data frames.
+
+***
+
+## Exercise 8.9 - the `lapply` function and data frames
+
+
+```{r}
+df <- data.frame( a = 1:10, b = seq(100, 550, 50), 
+                  c = LETTERS[1:10], d = rep(c(T,F), 5), 
+                  e = -10:-1)
+
+# normalize numerical columns using `lapply`
+# do not change the remaining columns
+# round the normalized values to three decimal places
+# save the result in the df variable
+df <- lapply(df, function(x) {
+  if(is.numeric(x)){
+    round((x - mean(x))/sd(x), 3)
+  } else x
+})
+
+# print df
+df
+```
+
+***
+
+We see that after using `lapply` we get a list and that if we want the result in the form of a data frame we need to add another step using the` as.data.frame` function. If we are looking for a simpler way that immediately gives the data frame as a result, there is one convenient "trick" that we will explain below.
+
+Let's look at the solution of the previous problem, and put the following little change in the assignment of the result of the `lapply` function:
+
+```{r, eval = F}
+df[] <- lapply(...)
+```
+
+
+In this way, R will not create a "new" variable named `df`, but rather the` lapply` result will be entered in the 'all rows and columns of the `df` data frame. This made it possible for us to get the result in the form of a data frame, which we actually wanted. For this very reason, in R scripts, we will often see a similar syntax (`df [] <- lapply ...`). Try to modify the above example in the above manner and make sure that the result will be a data frame.
+
+Another commonly used trick in working with data frames is the following command:
+
+```{r, eval = F}
+sapply(df, class)   
+```
+
+This command actually gives us the answer to the question - which types are the columns of the given data frame? Although there are other ways to get this information, this method is popular both because of the compactness of the results and the independence of additional packages.
+

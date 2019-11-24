@@ -1,0 +1,88 @@
+---
+title: "Homework7 - User defined functions"
+author: "João Conde"
+date: "11/11/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Exercises
+
+### 1. R has a which function which converts a logical vector into a numeric one containing indexes where the original vector has a TRUE value (so c(T, F, F, F, F, T, F, T) becomes c(1, 6, 8)). Create a function which replicates this behaviour.
+
+```{r}
+myWhich <- function(v){
+  stopifnot(is.logical(v))
+  indexes <- vector()
+  for(i in 1:length(v)) if(v[i]) indexes <- c(indexes, i)
+  indexes
+}
+
+myWhich(c(T, F, F, F, F, T, F, T))
+```
+
+
+### 2. Create a factory of moment functions (moment(k)) for calculating the standardized central moment of the k-th order. Create the functions zero_moment (x) and first_moment (x) with parameter values k set to 0 and 1 accordingly. Test the functions on vector 1:1000. Compare the results given by the sd (standard deviation) function over the vector 1: 1000 and root of the first moment you have calculated.
+
+```{r}
+moment <- function(k){
+  function(x){
+    sum((x - mean(x))**(k+1))/length(x)
+  }
+}
+zero_moment <- moment(0)
+first_moment <- moment(1)
+
+zero_moment(1:1000)
+first_moment(1:1000)
+
+sd(1:1000)
+```
+
+
+### 3. 
+
+```{r}
+Person <- function(id, surname, weight) {
+    p <- list(id = id, surname = surname, weight = weight)
+    class(p) <- "Person"
+    p
+}
+
+print.Person <- function(p) {
+    rez <- paste("ID:", p$id, ", surname:", p$surname, ", weight:", p$weight, "\n")
+    cat(rez)
+}
+
+# Implement a constructor for the class Employee which inherits the Person class.
+# Employee has all the attributes of the Person class as well as the superior attribute which represents a reference to a employee who is his/her superior (if such exists, otherwise it should be NA).
+Employee <- function(id, surname, weight, superior){
+  e <- list(id = id, surname = surname, weight = weight, superior = superior)
+  class(e) <- c("Employee", "Person")
+  e
+}
+
+# Create two objects of the Employee class (one superior to another) and print them with the print function. 
+e1 <- Employee("ID1234", "Conde", 80, NA)
+e2 <- Employee("ID4321", "Dias", 85, e1)
+print(e1)
+print(e2)
+cat("------------------\n")
+
+# Then implement your own version of the generic function print for the Employee class that prints employee data and his/her superior employee data (if it exists, otherwise it prints a message that there is no superior employee). Reprint both employees with the print function.
+print.Employee <- function(e){
+  info <- paste("ID:", e$id, ", surname:", e$surname, ", weight:", e$weight)
+  cat(info)
+  if(is.list(e$superior)) 
+    cat(paste(" has superior ->", e$superior$id, e$superior$surname, "\n"))
+  else 
+    cat(" has no superior\n")
+}
+print(e1)
+print(e2)
+
+```
+

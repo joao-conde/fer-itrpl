@@ -1,0 +1,58 @@
+---
+title: "Homework8 - 'apply' family of functions"
+author: "João Conde"
+date: "22/11/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Exercises
+
+### 1. 
+
+```{r}
+# Take the m matrix created by the following command:
+m <- rbind(1:5, seq(2, 10, 2), rep(3, 5), 3:7, seq(100, 500, 100))
+m
+cat("------------------------------\n")
+
+# With the apply function and the new anonymous function, create a vector that will contain the first even element of each row, or zero if the corresponding row does not have even elements.
+apply(m, 1, function(row){
+  evens <- row[row %% 2 == 0]
+  if(length(evens) != 0) evens[1]
+  else 0
+})
+```
+
+
+### 2. 
+
+```{r}
+# The following commands will create a list of 100 elements where each element will be a numeric vector of a random length of 1 to 10
+set.seed(1234)
+myList <- replicate(100, sample(1:10, sample(1:10, 1)))
+
+# With the help of lapply / sapply (and additional commands if necessary), create:
+
+## - the numerical vector v with the lengths of the list elements
+v <- sapply(myList, length)
+v
+cat("-------------------\n")
+
+## - list l with normalized numerical vectors of the original list
+l <- lapply(myList, function(x) (x - mean(x)/sd(x)))
+l
+cat("------------------------------\n")
+
+## - numerical vector ind4 with indexes of all list elements containing number 4
+ind4 <- which(sapply(myList, function(v){4 %in% v}))
+ind4
+cat("------------------------------\n")
+
+## - the df5 data frame containing columns which have all the elements of the length of 5 from the original list
+df5 <- data.frame(myList[which(sapply(myList, function(v) length(v)==5))])
+df5
+```
