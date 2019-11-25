@@ -1,0 +1,496 @@
+---
+title: "9 Pipeline operator and tidy data"
+author: "João Conde"
+date: "25 November 2019"
+output:
+  html_document: default
+---
+
+
+Let's look at the following example: imagine that in R we want to create 100 random real variables from the range of [0,100], round them to two decimals, select a sample of 10 variables from this set, calculate the arithmetic mean of the sample and print it on the screen. One possible solution could be:
+
+```{r}
+set.seed(1234) # (for repeatability)
+
+res <- runif(100, 0, 100) # 100 random variables from uniform distribution from 0 to 100
+res <- round(res, 2)
+res <- sample(res, 10)
+res <- mean(res)
+res
+```
+
+This kind of code has a lot of unnecessary repetition - in every line we use the `res` variable as well as the assignment operator `res` variable so we can store the in-between results. Alternatively, we could do everything in one row:
+
+***
+
+## Assignment 9.1 - Nested functions
+
+
+```{r}
+set.seed(1234)
+
+# repeat the above example, but with only one line of code
+mean(sample(round(runif(100, 0, 100), 2), 10))
+```
+
+
+
+***
+
+How does the `%>%` operator work? 
+
+```{r, eval = FALSE}
+h(g(f(x), y), z, w) # code without the %>% operator
+
+f(x) %>% g(., y) %>% h(., z, w) # code with the %>% operator
+
+```
+
+If the result of the previous function the first argument of the next function, then the `.` symbol (or in effect the whole argument) can be thrown out, so the syntax is even shorter:
+
+```{r, eval = FALSE}
+
+f(x) %>% g(y) %>% h(z, w) # code without dots
+
+```
+
+
+Now let's try to reformat our first example with the help of the `%>% 'operator.
+
+***
+
+
+## Assignment 9.2 - Operator `%>%`
+
+
+```{r}
+set.seed(1234)
+
+# solve the first example again using the %>% operator
+library(magrittr)
+runif(100, 0, 100) %>% round(2) %>% sample(10) %>% mean
+```
+
+
+
+
+***
+
+Note that by reading the above program code, we very easily interpret the meaning of that line of program code, especially when compared to the same command written in the form of a "sandwich".
+
+We can store the end result of our "chain" of functions in the usual way:
+
+```{r}
+sum1to10 <- 1:10 %>% sum # result is stored in variable 'sum1to10'
+```
+
+but it may be more visually consistent to use the "inverted" assignment operator: `->`.
+
+```{r}
+1:10 %>% sum -> sum1to10 # works the same as the example above
+```
+
+Note that in situations where the result of the previous function is the only parameter of the following function, we can completely leave out the parentheses (so in the examples above, `sum`,` sum() `or` sum(.)` would all work equally).
+
+Now let's try to combine the `%>%` operator and `lapply` with the example already seen in the section on functions in the` apply` family.
+
+***
+
+## Assignment 9.3 - `lapply` function and `%>%` operator
+
+
+
+```{r}
+l <- list(a = 1:10, b = 10:20, c = 100:200)
+
+# create a matrix which contains the first and last element of each list element
+# these elements must be in their own rows
+# use functions lapply, unlist and matrix as well as the %>% operator
+# save the result in the `res` variable
+lapply(l, function(l) c(l[1], l[length(l)])) %>% unlist %>% matrix(nrow=length(l)) -> res
+    
+# print 'res'
+res
+```
+
+
+***
+
+
+**Example - operators as functions**
+
+
+```{r}
+# each pair of instructions is equivalent
+2 + 3
+`+`(2, 3)
+
+1:5
+`:`(1, 5)
+
+x <- c(1, 2, 3)
+`<-`("x", c(1,2,3))
+
+x[1]
+`[`(x, 1)
+
+```
+
+***
+
+
+Let's try to use this principle in the next exercise.
+
+***
+
+## Assignment 9.4 - combining pipe operator with other operators
+
+```{r}
+set.seed(1234)
+
+# "clean up " the following command with the help of the pipeline operator
+matrix(table(sample(round(sqrt(sample(1:10000, 10000, replace = T))), 100))[1:9], 3, 3)
+
+sample(1:10000, 10000, replace = T) %>% sqrt %>% round %>% sample(100) %>% table %>% '['(1:9) %>% matrix(3, 3)
+```
+
+
+***
+
+## Tidy data
+
+Tidz data principles have similarities with the relational data model, but are defined in a way that is more appropriate for statisticians and developers. These principles can be summarized as follows:
+
+- the data is organized into a table
+- each line represents an observation
+- each column represents a property or variable of that observation
+
+Since this may sound too trivial, let's take a look at what properties Hadley lists as typical of "messy" data:
+
+- column names are not variable names but rather their values
+- multiple different variables are stored in the same column
+- variables are saved in rows
+- multiple types of different observations are stored in the same table
+- one type of observation is stored in multiple tables
+
+Below, we will give some examples of tables that do not fully conform to the definition of tidy data, and show how to easily "tidy them up". For this, we will leverage functions provided by the `tidyr` package.
+
+***
+
+### The `gather` and` spread` functions
+
+
+***
+
+## Assignment 9.5 - `students` data set
+
+
+```{r}
+# load data from `students.csv` file into` students` variable
+# don't forget the `stringsAsFactors` parameter!
+students <- read.csv('data/students.csv', fileEncoding="UTF-8", stringsAsFactors = F)
+
+# familiarize yourself with the data using standard functions for this purpose
+# (names, sapply/class, str, head, summary ...)
+# in the following examples for this process, we will use the phrase "briefly explore the data frame" 
+# as a shortcut for the above process
+str(students)
+head(students)
+```
+
+
+***
+
+
+Note that this dataset has a lot of missing values that are written as `NULL`. Because R does not recognize this as a missing value, it loaded the data as character strings (or as factors if we forgot the `stringsAsFactors` parameter). Because the columns that relate to the ratings are obviously numeric, we can easily convert them to such using the `as.numeric ()` (or `as.numeric(as.character())` command if they are factors!). But there is a simpler way - if we know how the missing value is represented in the dataset, we can directly embed it in the `read.csv` command using the `na.strings` parameter.
+
+***
+
+## Assignment 9.6 - using the `na.strings` parameter
+
+
+```{r}
+# reload the data from the `students.csv` file into the` students` variable
+# add the `na.strings` parameter to the` read.csv` command with a character string representing NA
+students <- read.csv("data/students.csv", fileEncoding = "UTF-8", stringsAsFactors = F, na.strings = "NULL")
+
+# briefly explore the `students` data frame
+str(students)
+head(students)
+```
+
+
+***
+
+Let's try to reorganize the table so each row represents "a grade student received in a particular course". Consider what steps should be taken to create such a table. We need to:
+
+- create a categorical variable `course` which would have the names of all the courses (currently spread over column names)
+- create all student/course combinations that make sense (i.e. have a grade assigned to them)
+- fill in the combinations with the corresponding grade value
+
+This process is not impossible, but it does require a lot of jumping through hoops to redesign the data frame. To simplify this process, we can use the `gather` function from the` tidyr` package, which performs the exact procedure we described above: it "gathers" columns into a single variable and then populates the valuesof that variable with the existing column/row combinations. The function signature looks like this:
+
+```{r, eval = FALSE}
+gather(data, key, value, ..., na.rm = FALSE, convert = FALSE, factor_key = FALSE)
+```
+
+
+You can get a detailed description of the function by calling `?gather`, but here we will just briefly explain some of the parameters:
+
+- `data` obviously represents our data frame
+- `key` represents the name of the new column - the categorical variable we want to create (in our case `course`);  this function does not require that the column name be quoted
+- `value` represents the name of the new column (variable) which will hold values with values (in our case `grade`)
+- `...` represents the set of columns we "gather"; we can specify column names separated by commas (quotes are also not required), use the syntax `first_column:last_column`, or even just name the columns we do NOT want to gather by prefacing them with the `-` sign
+- `na.rm` describes whether we want to omit observations with `NA` values
+- `convert` will convert the data if we deem it necessary
+- `factor_key` asks us if we want to factorize the new variable we are creating
+
+Let's try out this function with our untidy data frame.
+
+***
+
+## Assignment 9.7 - `gather` function
+
+
+```{r}
+# create a 'grades' data frame by using the 'gather' function on the 'students' data frame
+library(tidyr)
+grades <- gather(students, course, grade, Math.1:Algorithms.1, na.rm = T, factor_key = T)
+
+# briefly explore the `grades` data frame
+str(grades)
+head(grades)
+```
+
+
+
+***
+
+
+The `spread` function  does the inverse job from the `gather`  function. It will "expand" data from a combination of a categorical column and a corresponding "value" column so the categories become column names, and the values from the value column get appropriately "spread" over the corresponding columns.
+
+The function signature looks like this:
+
+```{r, eval = FALSE}
+spread(data, key, value, fill = NA, convert = FALSE, drop = TRUE, sep = NULL)
+```
+
+Documentation of this function is easily retrieved by using `?spread`, and some elements can already be easily identified by using the knowledge of how the `gather` function works. Some of the parameters which might be useful to us will be described bellow:
+
+- `fill` describes what value to put in "non-existent" combinations after the spread is performed
+- `drop` describes whether columns for non-existent categories should be worked (if we were spreading a factor column and not or levels were represented)
+- `sep` allows us to have a column name which is not only a category value but a combination of the name of an category column we are spreading and the category level (with a defined separator)
+
+Let's try to "reconstruct" the original `students` data frame with this command.
+
+***
+
+## Assignment 9.8 - `spread` function
+
+
+```{r}
+# "spread" the 'grades' data frame to reconstruct the
+# original data frame
+# store the results in a `students2` data frame
+students2 <- spread(grades, course, grade)
+
+# compare `students` and` students2` data frames
+head(students)
+head(students2)
+str(students)
+str(students2)
+```
+
+
+***
+In the previous example, we demonstrated the inverse functionality of the `gather` and` spread` functions, but our usage `spread` did not serve to tidy up the data, it just enabled us to revert to the original data frame. Let us now look at an example where `spread` is sed to actually make the data tidier.
+
+Let's retrieve data from the `cars.csv` file that stores the technical characteristics of specific cars.
+
+***
+
+## Assignment 9.9 - `cars` data set
+
+
+```{r}
+#load the `cars.csv` file into a data frame called `cars`
+cars <- read.csv('data/cars.csv', stringsAsFactors = F, fileEncoding = "UTF-8")
+#briefly explore the `cars` data frame
+str(cars)
+head(cars)
+```
+
+***
+
+This table clearly violates the principles of tidy data which dictate that only one type of variable should be stored in a column - the technical characteristics of the car are placed in a unique column called `Technical.Characteristic` and in the `value` column holds very heterogenous values (we have mass in kilograms, length in meters, etc.).
+
+Try tidying up this data frame with the `spread` function.
+
+***
+
+## Assignment 9.10 - `spread` function (2)
+
+
+```{r}
+# create an `cars2` data frame which will have 
+# the tidied data from the `cars` data frame
+cars2 <- spread(cars, Technical.Characteristic, Value)
+
+# briefly explore the `cars2` dat frame
+str(cars2)
+head(cars2)
+```
+
+
+
+***
+
+## Assignment 9.11 - Consumer basket data
+
+
+```{r}
+# Load data from the `ConsumerBasket.csv` file into the 'invoices' data frame
+invoices <- read.csv("data/ConsumerBasket.csv", stringsAsFactors = F, fileEncoding = "UTF-8")
+# briefly explore the `invoioces` data frame
+str(invoices)
+head(invoices)
+```
+
+
+***
+
+## Assignment 9.12 - converting data frame to a ‘long’ format
+
+
+```{r}
+# convert `invoices` data frame to a "long" format
+# each row needs to have invoiceID and itemName 
+# only bought items need to be present
+# name the new data frame `invoicesLong`
+invoicesLong <- gather(invoices, itemName, Quantity, -invoiceID)
+invoicesLong <- invoicesLong[invoicesLong$Quantity != 0, 1:2]
+invoicesLong <- invoicesLong[order(invoicesLong$invoiceID),]
+invoicesLong
+
+# store the new data frame in a new CSV file
+# called "ConsumerBasketLong.csv"
+write.csv(invoicesLong, file = "data/ConsumerBasketLong.csv", row.names = F)
+```
+
+
+***
+
+## Assignment 9.13 - converting data frame to a ‘wide’ format
+
+
+```{r}
+# try formatting the "long" format back to "wide"
+invoicesWide <- invoicesLong
+invoicesWide$value <- 1
+invoicesWide <- spread(invoicesWide, itemName, value, fill = 0)
+
+# store the new data frame in a new CSV file
+# called "ConsumerBasketWide.csv"
+write.csv(invoicesWide, file = "data/ConsumerBasketWide.csv")
+```
+
+
+***
+### The `separate` and `unite` functions
+
+***
+
+The `tidyr` package has a number of other useful features for efficient transformation and clean up of our data frames, and here we will address two more commonly used onesm called `separate` and `unite`.
+
+The `separate` function is useful when a column has "complex" values that we want to separate into two or more columns.
+
+## Assignment 9.14 - `Deparments` data set
+
+
+```{r}
+# read data from the `departments.csv` file into the` departments` variable
+departments <- read.csv(file = "data/departments.csv", stringsAsFactors = F, fileEncoding = "UTF-8")
+# briefly explore the `departments` data frame
+str(departments)
+head(departments)
+```
+
+***
+
+This table shows the revenues and expenditures of a company departments by quarter. Quarters are currently stored in a complex variable called `Quarter` consisting of identifiers of the annual quarter (`Q1`, `Q2`, `Q3` or `Q4`) and year. For analysis purposes, it would probably be more convenient to break this down into two columns - `Quarter` (which would store only the quarter identifier) and `Year`.
+
+The `tidyr` package for this purpose offers a `separate` function with the following signature:
+
+```{r, eval = FALSE}
+separate(data, col, into, sep = "[^[:alnum:]] +", remove = TRUE,
+  convert = FALSE, extra = "warn", fill = "warn", ...)
+```
+
+The complete documentation of the function can be viewed with the command `?separate` while here we explain some important parameters:
+
+- `col` - column to be separated (no quotes required)
+- `into` - names of new columns (character vector is recommended)
+- `sep` - value separator in original column, *default* value is actually a regular expression for "something that is not an alphanumeric character"
+- `remove` - describes whether or not to remove the original column
+
+Let's try to apply this function to the `departments` data frame. 
+
+***
+
+## Assignment 9.15 - the `separate` function
+
+
+```{r}
+# Separate the `Quarter` column into the` Quarter` and `Year` columns while removing the original column
+# save the resulting data grame to the `departments2` variable
+# try to do everything within one command with the help of the `%>%` operator
+departments %>% separate(Quarter, c("Quarter", "Year"), sep = "-") -> departments2
+
+# briefly explore the `departments2` data frame
+str(departments2)
+head(departments2)
+```
+
+
+***
+
+Note that the `Quarter` and` Year` columns are actually categorical variables so it would probably be a good idea to factorize them if we are to use them in further analysis.
+
+The `separate` function is often used to disassemble dates (eg `2016-10-28` into the year, month and day), but in such situations it is recommended to use the `lubridate` package created precisely for easier date management. We will introduce this package in one of the following chapters.
+
+***
+
+Finally, let's learn the `unite` function, which is somewhat less commonly used and is actually an inverse of the `separate` function. The `unite` function signature is:
+
+```{r, eval = FALSE}
+unite(data, col, ..., sep = "_", remove = TRUE)
+```
+
+In this case, too, we can easily retrieve the documentation for `unite`, and will just briefly describe the parameters that potentially require additional explanation:
+
+- `col` - new column name (quotes not required)
+- `...` - the names of the columns we merge - we don't have to use quotation marks, and if there are many columns we can use the same syntax to select as with the `gather` function
+
+Let's try using this function on the `departments2` data frame.
+
+***
+
+## Assignment 9.16 - the `unite` function
+
+
+```{r}
+# merge the `Quarter` and` Year` columns from the `departments2` table into a unique` Quarter` column
+# remove the previous `Quarter` and `Year` columns
+# use `-` as a separator
+# save the result to the `departments3` variable
+# use the `%>% 'operator to put everything in one line
+departments2 %>% unite(Quarter, Quarter, Year, sep = "-") -> departments3
+
+# compare `departments` and` departments3` data frames
+str(departments)
+str(departments3)
+head(departments)
+head(departments3)
+```
+
+***

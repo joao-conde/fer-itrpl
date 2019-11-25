@@ -1,0 +1,49 @@
+---
+title: "Homework9 - Pipeline operator and tidy data"
+author: "João Conde"
+date: "25/11/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Exercises
+
+#1.
+```{r}
+# Initialize the random number generator using the command `set.seed (1234)`. Then, with the help of a single command and the `%>% 'operator, perform the following:
+# - create 100,000 random numbers drawn from the normal distribution with  arithmetic mean of 10000 and standard deviation of 1000
+# - round the numbers to the first larger integer
+# - drop duplicates from the set
+# - sort the set in ascending order
+# - randomly select 100 elements from the set
+# - organize these 100 elements into a 10x10 matrix, arranged in rows
+# - calculate sums of rows of the matrix
+# - print the mean of line sums on the screen
+library(tidyr)
+set.seed(1234)
+rnorm(100000, 10000, 1000) %>% round %>% unique %>% sort %>% sample(100) %>% matrix(nrow=10, ncol=10) %>% apply(1, sum) %>% mean
+```
+
+#2.
+```{r}
+# The `weather.csv` file contains meteorological station meteorological data which measures the temperature, pressure, humidity and wind speed every hour (data are downloaded and adapted from the data set of the` weatherData` package available on CRAN). Do the following:
+# - load the file into the data frame and examine the loaded data (`names`, `str`, `summary`,` head` ...)
+weather <- read.csv(file = "data/weather.csv", stringsAsFactors = F, fileEncoding = "UTF-8")
+str(weather)
+head(weather)
+
+# - Is it a tidy dataset? Why?
+## R: No. 
+## - The 'time_hour' column should be split into year, month, day, hour, minutes and seconds.
+## - Measure has multiple types of measure which have a value measured in different units (temp in ºC, humid in %)
+
+# - Take the appropriate steps to obtain a data frame that complies with the tidy data principle
+weather %>% spread(Measure, Value) %>% separate(time_hour, c("date", "time"), sep = " ") %>%  separate(time, c("hours", "minutes", "seconds"), sep = ":") %>% separate(date, c("year", "month", "day"), sep = "-") -> weatherClean 
+weatherClean
+
+# - save the new data frame to the file called `weatherClean.csv`
+write.csv(weatherClean, file = "data/weatherClean.csv")
+```

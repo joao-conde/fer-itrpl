@@ -1,0 +1,19 @@
+Car model,Technical Characteristic,Value
+Opel Astra,Cylinders,4
+Opel Astra,HP,125
+Opel Astra,Length m,4.267
+Opel Astra,Mass kg,1285
+Audi A4,Cylinders,4
+Audi A4,HP,136
+Audi A4,Length m,4.703
+Audi A4,Mass kg,1470
+Renault Grand Scenic,Cylinders,4
+Renault Grand Scenic,Valves,16
+Renault Grand Scenic,HP,110
+Renault Grand Scenic,Length m,4.560
+Citroen C6,Cylinders,6
+Citroen C6,HP,215
+Citroen C6,Mass kg,1816
+Fiat 500L,Cylinders,2
+Fiat 500L,HP,103
+Fiat 500L,Mass kg,1260
