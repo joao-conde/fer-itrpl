@@ -24,7 +24,7 @@ citiesNH
 # 2. In the folder along with this notebook, locate the file receipt.csv and load it into the receipt variable. Make sure that character sequences are not automatically converted into factors. Print to the screen:
 
 ```{r}
-receipt <- read.csv("data/receipt.csv")
+receipt <- read.csv("data/receipt.csv", stringsAsFactors = F)
 
 ## - the number of rows in this table
 nrow(receipt)
