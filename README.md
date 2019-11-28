@@ -7,6 +7,7 @@ The course unit [*Introduction to R programming language*](https://www.fer.unizg
 My solutions are directly written in these [workbooks](workbooks/) and [homeworks](homeworks/).
 
 ```
+├── exams             -- RMD (R Markdown) files with executable R chunks for midterm and final exams
 ├── homeworks         -- RMD (R Markdown) files with executable R chunks for homework exercises
 ├── workbooks         -- RMD (R Markdown) files with executable R chunks for workbook exercises
 └── cheatsheet-r.pdf  -- a basic R programming language cheatsheet

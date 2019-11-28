@@ -1,0 +1,316 @@
+---
+output:
+  html_document: default
+---
+
+```{r setup, include = F}
+library(tidyverse)
+knitr::opts_chunk$set(results = 'hold')
+```
+
+******************
+
+## INTRODUCTION TO R PROGRAMMING LANGUAGE
+#### **Faculty of Electrical Engineering and Computing, University of Zagreb**
+#### 28/11/2019
+
+******************
+
+# **MIDEXAM 2019/2020**  
+
+======================================================================================
+
+#### JMBAG: 0036528317         
+#### Name and surname: João Conde 
+#### e-mail: joaodiasconde@gmail.com
+#### IP address: 161.53.78.35
+
+
+======================================================================================
+
+
+#### BASIC INSTRUCTIONS
+
+Below you will find a series of assignments for the final exam. Task options can include **entering a program code** or **pure text** and **executing a program code **. Please follow the instructions below:
+
+- Before starting to solve the exam press  **Knit to HTML** button to check the validity of the platform and get the exam template in a more readable form in the right-hand pane 
+- unless otherwise stated in an idividual assignment, you can create additional code chunks pressing the **CTRL + ALT + I** button combination or by selecting **Insert -> R**
+- read the text of the assignments carefully
+- the assignment text can also contain program code that you need to modify and update, and execute it according to the instructions given in the assignment text and / or comments of the existing program code
+- If the task solution is a program code that prints something, be sure the notebook includes that print
+- feel free to comment your program code or put additional explanations in text form, if necessary
+
+
+After solving this notebook, select the option **Knit to HTML**, save the result in HTML format and upload it to the **Moodle** pages of this course (NOT DONE FOR THE TEMPLATE!).
+
+while solving this notebook you can use auxiliary resources such as reminders, R documentation, lecture notes, *Google* search engine . **You may not exchange information with other exam participants in any form of communication, including email, social networks, chat programs, or the use of a shared repository.**
+
+By storing a HTML version of the solved noteboook under your username and password, you guarantee that during this exam you have not received nor offered any assistance from or to other students and that you have not been using means of solving the exam which are not explicitly allowed by the courses lecturers. These are acts of violation of the Code of Conduct and may cause further penalties enforced by the Faculty.
+
+```{r}
+rm(list = ls())    # erasing the global environment
+```
+
+
+=====================================================================================
+
+## Assignments
+
+******************
+
+**(2 points)**
+
+1. With one or more R instructions create the following vectors:
+
+- vector `a` which contains all natural numbers between 100 and 10000 ending with digit `7`
+- vector `b` which looks like this:
+  `(-500, 500, NA, -499, 499, NA, ..., -1, 1, NA)`
+  
+Print **the first *5** and **last 5** elements of each vector on the screen.
+
+*NOTE: Your solution must not contain explicit programming loops*
+
+
+**SOLUTION**
+```{r}
+a <- 100:10000
+a <- a[a %% 10 == 7]
+
+b <- -500:0
+b <- as.vector(sapply(b, function(x){ c(x, -x, NA) }))
+b <- c(b, c(-1, 1, NA))
+
+head(a, n = 5)
+tail(a, n = 5)
+
+cat("------------------------------\n")
+
+head(b, n = 5)
+tail(b, n = 5)
+```
+
+          
+******************
+
+**(2 points)**
+
+2. Create a function called `createMatrix(n)` which accepts a natural number `n` and returns a square matrix of order `n` where each row is filled with a number corresponding to the row index. For example, if `n` is `4`, then this function should return a matrix which looks like the following:
+
+```
+1 1 1 1
+2 2 2 2
+3 3 3 3
+4 4 4 4
+```
+
+Print the result of the following function call: `createMatrix(7)`.
+
+*NOTE: Your solution must not contain explicit programming loops*
+
+
+**SOLUTION**
+```{r}
+createMatrix <- function(n){
+  matrix(1:n, nrow = n, ncol = n)
+}
+
+createMatrix(7)
+```
+
+
+********************
+
+**(2 points)**
+
+3. List `l` is defined like this:
+
+```{r}
+l <- list(smallLetters = letters[1:15], LETTERS[16:27], c = c(T, F, T, F))
+```
+
+a) Rename the unanonimous element so its name becomes `bigLetters`.
+
+**SOLUTION**
+```{r}
+names(l)[2] <- "bigLetters"
+l
+```
+
+b) Print the first 5 elements of a subelement named `bigLetters`.
+
+**SOLUTION**
+```{r}
+head(l$bigLetters, n = 5)
+```
+
+******************************
+
+**(1 point)**
+
+4. The following code chunk defines a constructor function for the object of class `Book` and its generic function for printing it on screen.
+
+```{r}
+Book <- function(author, title) {
+  b <- list(author = author, title = title)
+  class(b) = "Book"
+  b
+}
+
+print.Book <- function(b) {
+  cat(paste0("Author: ", b$author, "\nTitle: ", b$title, "\n"))
+}
+
+```
+
+Create a constructor for an object of class `Coursebook` which inherits the `Book` class and has an additional attribute called `courseName`, containing the name of the course for which it pertains to.
+
+Using this constructor function create a variable called `R.book` of class `Coursebook` which has the following attribute values: `Hadley Wickham` (author), `Advanced R` (title), `R programming` (course name). Print this object with the help of the generic function `print`, and then with the help of function `print.default`. **Explain the results**.
+
+**SOLUTION**
+```{r}
+Coursebook <- function(author, title, courseName){
+  cb <- list(author = author, title = title, courseName = courseName)
+  class(cb) = c("Coursebook", "Book")
+  cb
+}
+
+R.book <- Coursebook("Hadley Wickham", "Advanced R", "R programming")
+print(R.book)
+cat("----------------------\n")
+print.default(R.book)
+
+# EXPLANATION
+# 
+# When a generic function like 'print' is invoked on our 'Coursebook' object, R will first try to find a function named 'print.Coursebook'. Such happens because the generic functions are simply interfaces that call the correct and appropriate function. Because 'print.Coursebook' does not exist, R attempts to call 'print.Book' (the next 'class' attribute) and finds it. As such, 'print(R.book)' will be printed using 'print.Book'.
+# However, calling 'print.default' is the function that would execute in case we did not have neither 'print.Coursebook' neither 'print.Book' defined. This is a default print that in this case prints a list of attributes (because the object is essentially a list).
+```
+
+
+**********************************
+
+5. File `coursePoints.csv` contains data about points students gained on a certain faculty course. Load this data into a dataframe called `points` and briefly explore it, then solve the following assignments.
+
+
+
+```{r}
+# loading and exploring the data frame
+points <- read.csv("coursePoints.csv") #no strings so no need for 'stringsAsFactors = F'
+str(points)
+head(points)
+```
+
+
+a) Print the id and midexam points for all students who have strictly less than 10 points from laboratory and strictly less than 5 points from homework assignments.
+
+**SOLUTION**
+```{r}
+points[points$laboratory < 10 & points$homework < 5, c("studentid", "midexam")]
+```
+
+
+b) Add a column called `totalPoints` to this data frame which will contain a sum of all points from attendance, laboratory, homeworks, midexam, project and final exam (students who haven't submitted the project assignment should have `NA` as total points since they cannot pass the course). Print the first 7 rows of the data frame.
+
+**SOLUTION**
+```{r}
+points$totalPoints <- points$attendance + points$laboratory + points$homework + points$midexam + points$project + points$finalexam
+
+head(points, n=7)
+```
+
+
+c) Add a categorical column `outcome` which will have a value of `Pass` for all students who have strictly more than 50 total points and `Fail` in **all other cases**. Print the frequencies of each category.
+
+**SOLUTION**
+```{r}
+points$outcome <- ifelse(is.na(points$totalPoints) | points$totalPoints <= 50, "Fail", "Pass")
+points$outcome <- factor(points$outcome)
+
+table(points$outcome)
+```
+
+
+****************************************
+
+6. Change the following code chunks (between the `################` lines) so they do not use explicit programming loops.
+
+a)
+
+```{r}
+
+#######################
+x <- 1
+resultA <- 1
+
+while(x <= 100) {
+  if (!(x %% 17)) resultA <- resultA * x
+  x = x + 1
+}
+######################
+
+resultA
+```
+
+
+**SOLUTION**
+```{r}
+#######################
+resultA <- 1:100
+resultA <- prod(resultA[resultA %% 17 == 0])
+######################
+resultA
+```
+
+
+b)
+
+```{r}
+set.seed(1234)
+l <- list(a = 1:100, b = 10:sample(100:200, 1), c = LETTERS)
+
+########################
+resultB <- 0
+for (i in l) {
+  resultB <- resultB + length(i)
+}
+###########################
+
+resultB
+```
+
+
+**SOLUTION**
+```{r}
+set.seed(1234)
+l <- list(a = 1:100, b = 10:sample(100:200, 1), c = LETTERS)
+
+#######################
+resultB <- sum(sapply(l, length))
+######################
+
+resultB
+```
+
+
+****************************************************
+
+7. Load data from `dirtyIris.csv` in a variable called `dirtyIris`. Explore this data frame and then transform it so it conforms to the principles of tidy data (using the assumption that one flower = one observation). Pay attention that the data types of the final data frame conform to the actual data type contained within.
+
+**SOLUTION**
+```{r}
+dirtyIris <- read.csv("dirtyIris.csv")
+str(dirtyIris)
+head(dirtyIris)
+cat("-----------------------------------------------------------------\n")
+library(tidyr) #Opting not to use the 'magrittr' package for the pipeline operator "%>%" because operations are simple and clear
+
+# FeatureName contains 2 different features so we must spread it into 2 different columns
+dirtyIris <- spread(dirtyIris, FeatureNames, FeatureValues)
+
+# Petal.Length.and.Width Sepal.Length.and.Width holds 2 feature's values. We must separate these 2 into Petal Length and Petal width with associated values (same for Sepal Length and Sepal Width)
+# Setting 'convert = T' to convert the columns to correct data types (lengths and widths in doubles instead of characters)
+dirtyIris <- separate(dirtyIris, Petal.Length.and.Width, c("Petal Length", "Petal Width"), "/", convert = T)
+dirtyIris <- separate(dirtyIris, Sepal.Length.and.Width, c("Sepal Length", "Sepal Width"), "/", convert = T)
+head(dirtyIris)
+```
+
+
