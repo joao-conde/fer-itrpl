@@ -1,0 +1,686 @@
+---
+title: "10 Dates and strings"
+author: "João Conde"
+date: "8 January 2020"
+output:
+  html_document: default
+---
+
+***
+
+## Working with dates
+
+
+The R programming language offers three main classes for date/time management:
+
+- `Date` for dates
+- `POSIXct` for compact representation of timestamps
+- `POSIXlt` for "long" representation of timestamps (in list format)
+
+### The `Date` class
+
+We use the Date class when we want to note the date but not the exact time of an observation or event. This class does not have a constructor, and we most commonly create `Date` objects using the following functions:
+
+- `Sys.Date()` which returns today's date
+- `as.Date(<date_string>)` which accepts a character string as a parameter
+
+The function `as.Date()` by default accepts dates in the following format: `%Y-%m-%d`. Here, `%Y` represents a four-digit year, while `%m` and `%d` are two-digit months and days. If we want to interpret a date that is written in another format then we need to add an additional parameter called `format` which will parametrically describe the format we are using (e.g. for `28/10/1978` the format parameter value should be `%d/%m/%Y`). Other format specifications can easily be viewed using the `?strptime` command, although a much simpler approach entails using functions of the` lubridate` package (to be introduced later in this chapter).
+
+***
+
+## Assignment 10.1 - class `Date`
+
+```{r}
+# print out today's date
+Sys.Date()
+
+# convert the following character strings to a `Date` type object and print the result on the screen:
+# '1986-12-27'
+as.Date('1986-12-27')
+
+# '2016-31-05'
+as.Date('2016-31-05', format='%Y-%d-%m')
+
+# '17.10.2015 '
+as.Date('17.10.2015 ', format='%d.%m.%Y')
+
+# '01#01#2001'
+as.Date('01#01#2001', format='%d#%m#%Y')
+```
+
+
+
+***
+
+Dates allow using simple arithmetic operations. We can add or substract days from a date by using operators  `+` and `-` with integers, or we can calculate the difference between two dates with the operator `-`.
+***
+
+## Assignment 10.2 - date arithmetics
+
+```{r}
+# print out what date was 1000 days before today
+Sys.Date() - 1000
+
+# add one day to 2/28/2015. and 2/28/2016 and print the result
+as.Date('2/28/2015', format='%m/%d/%Y') + 1
+as.Date('2/28/2016', format='%m/%d/%Y') + 1
+
+# print out how many days have passed since 1.1.2000. until today
+Sys.Date() - as.Date('1.1.2000', format='%d.%m.%Y')
+```
+
+***
+
+
+The last expression will actually result in an object of class `difftime` which is an object representation of a time interval. Printing this object uses so-called "automatic" unit selection (specifically, the `units` parameter is by default set to `auto`) that will attempt to select the most appropriate time unit for printing. If we want to explicitly choose which time unit we want (seconds, minutes, hours, days or weeks), then it's easier to forgo using the `-` operator and leverage the `difftime()` function directly. Specific time unit can then be chosen by setting the `units` parameter to `seconds`, `minutes` etc.
+
+***
+
+## Assignment 10.3 - function `difftime`
+
+
+```{r}
+# Use the `difftime` function
+# How many weeks passed between 1.3.2016. i 1.3.2015.?
+difftime(as.Date('1.3.2016', format='%d.%m.%Y'), as.Date('1.3.2015', format='%d.%m.%Y'), unit="week")
+
+# How many hours have passed between 1.3.2015. and today?
+# NOTE: You do not need to explicitly call the `as.Date` function, the `difftime()` function
+# will do it by itself if you submit the date in the default format
+difftime(Sys.Date(), '2015-03-01', units = "hours")
+
+```
+
+
+***
+
+
+The `difftime` function actually works with timestamps as well, i.e. we don't necessarily have to work at the date level, we can get information on finer granularity when it comes to time units. We will show this in more detail after we learn the class `POSIXct`. Also, if we only require a number (of seconds, hours, days, etc.), we can easily transform the `difftime` output into an integer using the `as.numeric` function.
+
+The R language also implements a special variant of the `seq` function for working with dates, which has the following signature:
+
+```{r, eval = F}
+seq(from, to, by, length.out = NULL, along.with = NULL, ...)
+```
+
+
+The parameters of this function are as follows:
+
+- `from` - start date (required parameter)
+- `to` - final date
+- `by` - step of the sequence in days, or a character string which denotes the time interval such as `"7 days"`, `"2 weeks"` etc. (for all possibilities see the documentation!)
+- `length.out` - length of sequence
+- `along.with` - vector whose length we take for reference (`along.with(x)` is the same as `length.out = length(x)`)
+
+Let's try this function.
+
+***
+
+## Assignment 10.4 - function `seq` and dates
+
+```{r}
+# print the date sequence from 1/1/2010. to 1/1/2030. in 6-month increments
+seq(as.Date('2010-1-1'), as.Date('2030-1-1'), by = '6 months')
+
+# make a schedule for one round of cleaning the common areas of an apartment building
+# common areas must be cleaned every 3 weeks
+# each apartment must get their own date
+# apartments are described by the following data frame
+apartments <- data.frame(appId = 1:10,
+                      surname = c("Ebert", "Ladovac", "Cerić", "Dikla", "Anic",
+                                  "Perić", "Žužić", "Babić", "Ibiza", "Radler"))
+
+# Add a `cleaningDate` column with one date for each apartment
+# in order of apartment numbers, starting today
+apartments$cleaningDate <- seq(Sys.Date(), by = '3 weeks', along.with=apartments$appId)
+
+# print out the 'apartments' data frame
+apartments
+```
+
+***
+
+### The`POSIXct` and` POSIXlt` classes 
+
+The class `POSIXct` is when in addition to the date we also need to know the exact time for some observation or event. The usual way of creating an object of this class is using the following functions:
+
+- `Sys.time()` which returns the current timestamp (using the timezone set by the operating system)
+- `as.POSIXct(<timestamp_string>)` which uses a character string representing the date and time
+
+The function `as.POSIXct()` expects a timestamp character string that uses the following format: `%Y-%m-%d %H:%M:%S`. First three format specifications are identical to the date format specification, while `%H`, `%M` and `%S` represent two-digit hours, minutes and seconds (24-hour time format is assumed unless `am` or `pm` is noted). The `as.POSIXct` function can also accept an optional `tz` parameter which explicitly sets the timezone. To parse other timestamp formats, it is necessary - as with the class `Date` - to add a `format` parameter containing a specification on how to interpret the given character string. Again, for the list of all parameters we can refer to the the `?strptime` command, although as with the `Date` class we will later learn it's often easier to use one of the functions of the `lubridate` package. 
+
+***
+
+## Assignment 10.5 - class `POSIXct`
+
+```{r}
+# print the current date and time
+Sys.time()
+
+# convert the following character strings to timestamps and print them on the screen:
+# "2015-10-28 15:30:42"
+as.POSIXct('2015-10-28 15:30:42')
+
+# "01-12-2001 14:30" <- timestamp read in New York, USA, EST time zone
+as.POSIXct('01-12-2001 14:30', format='%d-%m-%Y %H:%M', tz="EST")
+```
+
+
+
+***
+
+Time zone names are standardized (so-called "Olson time zones") and are retrieved from the underlying operating system. We can explicitly retrieve them using the `OlsonNames()` function. Also, we can easily print the current platform's time zone by using the `Sys.timezone()` function.
+
+***
+
+## Assignment 10.6 - time zones
+
+```{r}
+# print the current time zone
+Sys.timezone()
+
+# print out 10 randomly selected time zone names installed on the current platform
+sample(OlsonNames(), 10)
+```
+
+
+
+***
+
+Timestamps can also use `+` and `-` operators (with integers as the second operand) to add or substract seconds from the timestamp. Additionally, we can subtract two timestamps to get the difference in seconds, or use the `difftime` function with the selected time unit value.
+
+***
+
+## Assignment 10.7 - timestamp arithmetics
+
+```{r}
+# print out what the time will be 1000 seconds from now
+Sys.time() + 1000
+
+# print out how many hours have passed since midnight 1/1/2015 
+difftime(Sys.time(), as.POSIXct('2015-01-01 00:00:00'), units="hours")
+```
+
+
+***
+
+The class `POSIXlt` is very similar to its compact relative `POSIXct`. We use the similarly fashioned `as.POSIXlt` function to create one, however the difference is that we end up with a list which allows us to easily extract certain parameters from a timestamp, such as number of seconds, minutes, day of the week, etc. We can easily see all the elements of the list if we create a `POSIXlt` object and then call the `unclass` function on it, which will convert it to an "ordinary" list. We can even go a step further - if we put this list through the `unlist` function, we get a simple, easily interpretable character vector as a result.
+
+***
+
+## Assignment 10.8 - class `POSIXlt`
+
+
+```{r}
+# convert the following character string to a timestamp of type `POSIXlt`
+# store the result in the variable `t_long`
+# "01/05/2013 13:35"
+t_long <- as.POSIXlt('01/05/2013 13:35', format='%d/%m/%Y %H:%M')
+
+# print just the number of hours of the timestamp `t_long`
+# then just the number of minutes
+# you can find this information in subelements called `hour` and `min`
+t_long$hour
+t_long$min
+
+# remove the class and list property of the variable `t_long`
+# and print it on the screen
+library(magrittr)
+t_long %>% unclass() %>% unlist()
+
+```
+
+
+
+***
+
+
+### The `lubridate` package
+
+Although the R language has relatively good support for working with dates and timestamps, we can make managing them significantly more efficient by using a package called `lubridate` package. If we analyze data where the time component is very important, or manage data sets that use exotic ways of noting date and time, then we can greatly simplify and accelerate the analysis process by using the features provided by this package.
+
+One of the things that may be most helpful to developers who don't like to write formatted date parsing specifications is the family of date parsing functions whose names match the overall "structure" of the record we want to parse. For example, the function called `ymd` can parse character strings in which the date is written in the order *year-month-day*. The function is "smart" enough to interpret the details of the record itself, such as delimiters, character fields, etc. If the record has a different day, month, and year layout, it is only necessary to arrange the letters appropriately in the function name.
+
+***
+
+## Assignment 10.9 - date parsing functions of the `lubridate` package
+
+```{r}
+# using the functions in the `lubridate` package
+library("lubridate")
+# parse the following character strings into dates and print them on the screen
+# "2016-07-31"
+ymd('2016-07-31')
+
+# "2/28/1983."
+mdy('2/28/1983.')
+
+# "07#31#1996"
+mdy('07#31#1996')
+
+# "20010830"
+ymd('20010830')
+
+```
+
+
+
+***
+
+
+The aforementioned approach can also be used for timestamps, we just add the underscore and then the "letters" for hours, minutes and/or seconds (e.g. `ymd_hms`).
+
+***
+
+## Assignment 10.10 - timestamp parsing functions of the `lubridate` package
+
+```{r}
+# using the functions in the `lubridate` package
+# parse the following character strings to timestamps and print them on the screen
+# "5/17/1977 10:15 pm"
+mdy_hm("5/17/1977 10:15 pm")
+
+# "20160429 05/10/17"
+ymd_hms("20160429 05/10/17")
+```
+
+
+
+***
+
+Note that these functions always sets `UTC` for the time zone. This was intentionally designed to motivate the use of a consistent time zone in the data set we are analyzing. If desired, we can set the time zone with the `tz` parameter during parsing. Similarly, with timestamps already initialized, we can manage time zones using the following functions
+
+- `force_tz` - "enforces" the change to a new time zone while leaving the timestamp values the same
+- `with_tz` - converts a timestamp into one that matches the requested time zone
+
+```{r}
+t <- ymd_hms("20161129 05/10/17", tz = "EST")
+t
+
+force_tz(t, tz = "CET")
+with_tz(t, tz = "CET")
+```
+
+
+***
+
+The `lubridate` package also makes it easy to extract date and time segments from timestamps with functions such as` year`, `week`, `month`, etc. The same functions can also be used to change any of the timestamp components.
+
+***
+
+## Assignment 10.11 - extracting timestamp elements
+
+```{r}
+x <- mdy_hms("7/19/1996 4:15:27 PM")
+
+# extract and print hours from the timestamp above, followed by minutes
+hour(x)
+minute(x)
+
+# set the year of the above timestamp to 2011, and the month to June
+year(x) <- 2011
+month(x) <- 6
+  
+# print timestamp `x` on the screen
+x
+```
+
+
+
+***
+
+See the `lubridate` documentation for a complete list of features.
+
+For the current date and time, `lubridate` offers alternatives to the `Sys.Date()` and `Sys.time()` functions, which are simply called `today()` and `now()`.
+
+***
+
+## Assignment 10.12 - functions `today` and `now`
+
+
+```{r}
+# print out tomorrow's date
+today() + 1
+
+# print the timestamp which happened exactly an hour ago
+now() - 60 * 60
+
+```
+
+
+***
+
+We already mentioned that managing time-related data can become very complex, especially considering that time intervals can be expressed generically (e.g., "2 years") or specifically (the span of two dates), and that mathematical and calendar ways of expressing time intervals do not necessarily match (e.g., "period of one year" can mathematically mean "the exact number of seconds in 365 days" but also the contextually dependent "period until the same date next year").
+
+The `lubridate` package defines four options for defining time-related objects:
+
+- **instant** - timestamp rounded to the second
+- **duration** - "generically" defined interval in seconds
+- **period** - similar to duration, but allows you to define durations that do not always last mathematically (e.g. "3 months")
+- **interval** - the time interval between two specific moments
+
+We have already met the "istants", these are the timestamps we have already shown. To create durations and periods, we have intuitively defined functions that are named by English names for time units, with durations having the letter `d` as a prefix (from *duration*). Hence, we have the functions called `minutes`/`dminutes`, `hours`/`dhours`, `weeks`/`dweeks` etc. (note that there is no `dmonths` function, since we cannot unambiguously convert one month into seconds).
+
+***
+
+## Assignment 10.13 - durations and periods
+
+```{r}
+# print out objects which represent the duration and period of 3 weeks
+weeks(3)
+dweeks(3)
+
+# use the variable `v` to store a period of 5 years, 3 months and 2 days
+v <- years(5) + months(3) + days(2)
+v
+
+# add the above period to today's date
+v + today()
+```
+
+
+
+
+***
+
+Notice that the above expression would not be consistent if obtained "mathematically".
+
+Finally, we can create an interval by using the `interval` function and providing the **start** and **end** timestamps, or by using the` as.interval` function and giving the **duration/period** and the **start** timestamp. We can also use the operator `%--%` with two timestamps as operands.
+
+***
+
+## Assignment 10.14 - intervals
+
+```{r}
+# create a variable `interval1` to store the interval
+# between 6 months before today and 6 months after today
+interval1 <- interval(today() - months(6), today() + months(6))
+
+# create a variable `interval2` and store the interval from today
+# until the date that will happen in 4 months, 3 weeks and 2 days
+interval2 <- interval(today(), today() + months(4) + weeks(3) + days(2))
+
+# create a variable `interval3` that will store the interval
+# between 1.5.2002. and 1.7.2002.
+interval3 <- dmy("1.5.2002") %--% dmy("1.7.2002")
+
+# print out all three intervals
+interval1
+interval2
+interval3
+```
+
+
+
+***
+
+
+When we have intervals defined we can then:
+
+- check if a timestamp is within an interval with the help of the operator `%within%`
+- check whether the intervals overlap by using the function `int_overlaps()`
+- easily retrieve the start and end of intervals using the functions `int_start()` and `int_end()`
+- "merge" two intervals with the help of the `union` function or find the intersection between them with the help of the` intersect` function
+- other stuff we can learn by looking at the documentation
+
+***
+
+## Assignment 10.15 - working with intervals
+
+```{r}
+# check whether today is within the interval defined by the variable `interval1`
+today() %within% interval1
+
+# if `interval1` and` interval2` overlap
+# print out their intersection
+if(int_overlaps(interval1, interval2)) intersect(interval1, interval2)
+
+```
+
+
+
+***
+
+In this section, we are introduced to some of the functionality offered by the base R's date and time  classes as well as some of the functionalities offered by the `lubridate` package. For more information, see the official documentation of the R language and the `lubridate` package, or the article called "Dates and Times Made Easy with lubridate" written by the author of the package Hadley Wickham, available at <a href = "https://www.jstatsoft.org/article/view/v040i03/v40i03.pdf"> this link </a>.
+
+## Working with character strings
+
+*R* has very good support for character strings. However, the functions offered by base R are a bit unintuitive and inconsistent when compared to similar functions offered by other programming languages commonly used for text analysis (such as *Perl* or *Python*).
+
+It is for these specific reasons that the `stringr` package emerged, offering a very popular alternative to existing character string functions. However, before getting acquainted with the features offered by this package, it is necessary to briefly address the general issues of managing character strings in data analysis as well as introduce a technology without which the implementation of character string analysis is almost unthinkable - "regular expressions".
+
+### Text analysis and regular expressions
+
+Text analysis is an inevitable element of data analysis. Whether it's simple category identification, searching for specific patterns, or something performing more complex tasks commonly known as *text mining*, it's hard to imagine any meaningful data analysis that doesn't at some point require knowledge of at least the basic methods of managing sets of character strings.
+
+Regardless of the complexity of character string analysis we want to perform, one technology is ubiquitous and universally applicable - **regular expressions**. This is a special "language" that we use to define "patterns" which we use to search or process textual information in various ways.
+
+A thorough review of regular expression technology is beyond the scope of this coursebook. Below, we will provide only a brief overview. If you have never encountered this technology before, we strongly recommend that you make the effort and master at least the basic concepts, preferably using one of many excellent web resources. One very short yet effective regular expression mini-courses can be found <a href = "https://regexone.com/"> here </a>.
+
+A regular expression is simply a string of characters that represents the pattern we are looking for within a text. Eg. the regular expression `gram` is contained in the character string `Programming language R` but is not in the character string `Text analysis`. We say we found a "match" with the first string but not with the second.
+
+This kind of regular expression is not too flexible - the true power of regular expressions lies in using special symbols which enable describing patterns in a more "generic" way. Let's demonsrate this on a simple example.
+
+One common scenarios of using regular expressions is checking whether the user has entered an address that corresponds to the "general" form of the email address. One possibility is to simply use the expression `@` as a regular expression we want to find a "match" with the email adress we are checking for validity. This can help with filtering out a certain number of invalid email adresses, but will also allow "addresses" such as `@@@` and `@23456`. With a little "work" on the expression, you could come up with a slightly better solution, which may look something like this:
+
+```{r, eval = F}
+\w+@\w+\.\w+
+```
+
+Although it looks like a series of random characters, with basic knowledge of regular expressions (and, in this case, using the "Perl" standard) we can interpret the above expression relatively easily. The character `\w` stands for "letter, number or underscore", the sign `+` means "1 or more", etc. If you wanted to "transcribe" the above regular expression in a spoken language, it would be "one or more letters, digits or underscores', followed by the sign `@`, then again one or more letters, digits or underscores, then a dot and then finally one or more letters, digits or underscores." While this is not an overly sophisticated regular expression, it is still better than the first attempt. Further refinement is certainly possible, and although subsequent additions are increasingly making it harder to be easily interpreted by the human, we are also gaining more and more control over the formal definitions of what an email address should look like (for such specific uses, it is often worthwhile to check publicly available regular expression repositories where we can find complex but of high quality and carefully tested expressions that are easy enough to copy into our program code).
+
+We already stated that the above expression is written in so-called "Perl standard". Unfortunately, today there isn't a single standard for regular expressions. Most often used are so-called *"POSIX standard"* in two versions - *BRE* and *ERE* (*Basic Regular Expressions* and *Extended Regular Expressions*) which are pretty similar, except for the fact that *BRE* relies a bit on the `\` character and doesn't recognize some of the "newer" symbols that ERE uses. Another popular standard is the already mentioned *"Perl standard"* which is a version of regular expressions implemented in the *Perl* programming language. Because *Perl* is one of the leading languages for text processing, this standard has become one of the most widely accepted methods of using regular expressions.
+
+In general, almost all popular programming languages have support for regular expressions, either embedded in the language or with the help of additional packages. *R* is one of the languages that already includes support for regular expressions in its base package. What's more, *R* has built-in parallel support for the three most widely used standards mentioned above - *POSIX ERE*, *POSIX BRE* and *Perl*. *POSIX ERE* is the default setting, and with certain parameters we can easily "switch" to *BRE* (`extended = FALSE`) or *Perl* (`perl = TRUE`). In the following paragraphs, we will stick with the *ERE* standard, but it is also important to know that the above settings may be used if we already have previously constructed regular expressions that have been developed in another standard (and we do not want to be bothered by switching from one standard to another).
+
+The following table gives a brief overview of some of the more commonly used regular expression elements in the language *R*:
+
+
+Element | Meaning
+------ | -----------------------
+`abcd` | literal string "abcd"
+`1234` | literal string "1234"
+`\\d` or `[:digit:]` or `[0-9]`|  any digit
+`\\D` or `[:alpha:]` or `[A-Za-z]` | any letter
+`[:alnum:]` | any alphanumeric character
+`.` | any character
+`\\.` | dot (full stop)
+`[abc]` | only the characters listed
+`[^abc]` | all characters except those listed
+`*` | zero or more repetitions
+`+` | one or more repetitions
+`{n}` | exactly n repetitions
+`{m, n}` | at least m, at most n repetitions
+`?` | optional character
+`[:space:]` or `\\ s` | any blank (space, tab, new line)
+`[:punct:]` | punctuation marks
+`^ ... $` | a start and end markers
+`(ab|cd)` | string "ab" or string "cd"
+
+Note that when using the special character `\` as a part of a regular expression we actually have to use the double character `\\` (the first time to indicate to *R* that a special character follows, the second time to literally use it as part of the regular expression).
+
+The basic functions of the *R* language to work with character strings (and thus regular expressions) are, among other things, `grep`,` grepl`, `regexrp`,` gregexrp`, `regmatches`, `sub`, `gsub` etc. But since the `stringr` package offers a set of alternative functions with almost the same functionality but with far more intuitive names and more consistent signatures, we will focus on functions from that package, leaving the base functions to readers as an optional exercise to be learned from the official documentation.
+
+### The `stringr` package
+
+We have already stated that the `stringr` package actually reimplements to some extent the already existing functions of the language *R*, but in a more intuitive and consistent way. To be more precise, the functions of the `stringr` package have slightly reduced functionality, which is actually by design - one of the imperatives when designing this package was to identify the most commonly used functionalities for text analysis and focus on that primarily. Functionality that is "thrown out" concerns specific cases for which the developer will need to look for alternative solutions (often in the form of basic functions), but the benefit is in simpler, more intuitive features that are easier to learn and use effectively in the long-term effectively.
+
+Additional benefits of using the `stringr` package are:
+
+- consistent treatment of factors as character strings
+- consistent ordering of parameters, which is especially useful when used in conjunction with the operator `%>%`
+
+
+We can start with some simpler functions for which we do not need regular expressions (we list simplified function signatures, for more precise definitions consult the package documentation):
+
+- `str_c(string1, string2, ...)` - merge character strings, alternative to `paste0`
+- `str_length(string)` - returns the length of the character string
+- `str_sub(string, start, end)` - returns a substring using `start` and `end` as letter indexes (negative index means "counting from the back")
+- `str_sub(string, start, end) <- string2` - modifies `string` by exchanging the defined substring with `string2` (which does need not be the same length as the dropped substring!)
+- `str_trim(string)` - returns a string with removed blanks from the beginning and end of a string
+
+
+***
+
+## Assignment 10.16 - basic functions for working with character strings
+
+
+```{r}
+library(dplyr)
+library(stringr)
+
+string1 <- "             This is an example"
+string2 <- "of string concatenation!         "
+# using one line of instructions concatenate the above strings, 
+# remove the blanks at the beginning and end of the string from the result,
+# then select the substring from 35th to 55th character
+# and print the final result on the screen
+str_c(string1, string2) %>% str_trim %>% str_sub(35, 55)
+
+
+string <- "R is overly complicated and not an easy language!"
+# in the upper character string, replace all the characters 
+# from 6th place (counted from the start)
+# to 14th (counting from the end) 
+# with an empty string
+str_sub(string, 6, -14) <- ""
+
+# print the string
+string
+```
+
+
+
+***
+
+
+The `str_c` function also has a `sep` parameter if we want to paste the strings with a specific separator, and the `collapse` parameter which is `NULL` by default, but which can be used to merge elements of a character vector into a single string (with the value of the parameter used as a separator).
+
+
+***
+
+## Assignment 10.17 - merging character strings
+
+
+```{r}
+string1 <- "To merge"
+string2 <- "these strings"
+string3 <- "you need some space!"
+# merge the above strings into a single string and print the result
+str_c(string1, string2, string3, sep=" ")
+
+pieces <- c("These", "vector", "elements", "should", "be", "joined...")
+# merge the elements of the above vector into one string and print the result
+str_c(pieces, collapse=" ")
+```
+
+
+******
+
+Let's look at some `stringr` functions that work with regular expressions:
+
+- `str_detect(string, pattern)` - returns `TRUE` if `string` contains `pattern`, otherwise` FALSE`
+- `str_extract(string, pattern)` - returns a string of characters corresponding to the first occurrence of a pattern
+- `str_extract_all(string, pattern)` - returns a list with all occurrences that match the pattern
+- `str_replace(string, pattern, replacement)` - changes the first occurrence of a pattern with the replacement
+- `str_replace_all(string, pattern, replacement)` - changes all occurrences of a pattern with the replacement
+
+All of these functions are vectorized, which means that they behave logically (ie, "parallelized") when we use a character vector with multiple elements in place of a specific parameter. For example, if we give a vector of strings and a vector of replacements to the `str_replace` function, elements of the first vector and replacements will "pair up" in place of a given pattern. We can have other combinations, such as a vector of original elements and a vector of patterns, all three parameters as vectors with multiple elements etc. but every time the behavior of the function is consistent with the already learned principle of vectorization.
+
+***
+
+## Assignment 10.18 - functions and regular expressions
+
+```{r}
+addresses <- c("pero.peric@fer.hr", "iva.ivic@etfos.hr", "ppetrovic@gmail.com",
+            "branko1987@yahoo.com", "jaRULZ4EVR@gmail.nz", "dperkovic@efzg.hr",
+            "lalaic1998@gmail.co.uk", "perica.markic@fer.hr")
+
+# print the total number of mail addresses which belong to the `fer.hr` subdomain 
+sum(str_detect(addresses, "@fer.hr"))
+cat("-----------------------------------------------------------\n")
+
+# print all addresses that contain at least one digit
+addresses[str_detect(addresses, "[:digit:]")]
+cat("-----------------------------------------------------------\n")
+
+# list all addresses that have a vowel as the second character
+addresses[str_detect(addresses, "^.[aeiouAEIOU]")]
+cat("-----------------------------------------------------------\n")
+
+# print all unique email address subdomains 
+# (subdomain part of the address is everything after behind the `@` character)
+unique(str_match(addresses, "(?<=@).*"))[,1]
+cat("-----------------------------------------------------------\n")
+
+# anonymize the addresses above: all character strings in front of '@'
+# should be replaced with random 6-digit numbers
+sample(100000:999999, length(addresses)) %>% as.character %>% str_replace(addresses, "^[^@]*", .)
+```
+
+***
+
+
+Finally, we learn one relatively useful function called `str_split`. This function splits the character string into a vector of character strings, depending on the given separator (which may be a space, some other chosen character(s), or even a regular expression), and is often used as a "more primitive" alternative to the `read.csv` and` read.table` functions when we want to parse the input "manually", or - more commonly - to break a column of text into individual words for the purposes of text analysis. This function accepts a character string (or a collection of strings) as input, disassembles it according to the chosen separator and then returns the **list** of pieces as a result; if we disassemble only one string, we can easily translate the result into a vector using the `unlist` function.
+
+```{r}
+str_split("Example of str_split function", pattern = "[:space:]") %>% unlist
+```
+
+We will now try to perform a very simple example of text analysis - figuring out which words happen most frequently in a chosen text. To do this we first need to read a text file into an R object. One of the simplest ways to achieve this is using the `file` function (which opens up the connection towards the textual file) and then the `readLines` function which will read a chosen number of lines and store them in a character vector. For smaller files we can also immediately read the entire file simply by omitting the number of lines we want to read. An example of using these two functions may look like this:
+
+```{r, eval = F}
+con <- file("textFile.txt", "r")    # r = "read"
+rows <- readLines(con)   # or readLines(con, n = 100) 
+close(con)   # closing the connection
+
+```
+
+The next assignment will use two files
+
+- `HobbitChapterOne.txt` - the text we want to analyse and
+- `stopwords.txt` - file with frequent words which are "uninteresting" from the analysis point of view
+
+
+
+***
+
+## Assignment 10.19 - simple text analysis
+
+```{r}
+# store the text from `HobbitChapterOne.txt` into a variable called `hobbit`
+# and text from `stopwords.txt` into a variable called `stopwords`
+con <- file("data/HobbitChapterOne.txt", "r")
+hobbit <- readLines(con)
+close(con)
+
+con <- file("data/stopwords.txt", "r")
+stopwords <- readLines(con)
+close(con)
+
+# perform the next steps:
+# - merge all text segments from `hobbit` into one long character strings
+str_c(hobbit, collapse=" ") %>% 
+  
+# - remove all punctuation marks from the text
+str_replace_all("[:punct:]", "") %>%
+  
+# - change all text to "lowercase" (use `tolower`)
+tolower %>%
+  
+# - split the text using spaces as a separator
+str_split("[:space:]") %>%
+  
+# - remove "empty words" (words of length 0) if such exist
+# - remove all words which are present in the `stopwords` variable too
+unlist -> hobbit2 
+hobbit2 <- hobbit2[!(hobbit2 %in% stopwords | nchar(hobbit2) == 0)]
+
+# - count the frequencies of the words
+frequencies <- table(hobbit2) %>% sort(decreasing = T)
+
+# - print on screen 20 most frequent words
+frequencies[1:20]
+```
+
+***

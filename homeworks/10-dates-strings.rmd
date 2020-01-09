@@ -1,0 +1,26 @@
+---
+title: "Homework10 - Dates and strings"
+author: "João Conde"
+date: "11/01/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Exercises
+
+The following tasks relate to the data set stored in the CSV file `crimeSample.csv`, which is a sample from the record of criminal incidents in the City of Philadelphia (the original data set can be found at <a href =" https://www.opendataphilly.org/ dataset / crime-incidents "> this link </a>). The original set of columns was reduced and 1000 incidents were randomly sampled from the set of all observations.
+
+Before solving problems, load the data into the crimes data box and familiarize yourself with the data set (`str`,` head`, etc.)
+
+1. Convert the timestamp column from character type to `POSIXct` type.
+
+2. Add the following columns to the data frame: `Year`,` Month`, `Hour`. Fill in the columns with the appropriate information from the timestamp. Answer the question: in what month does the most crime occur? Which hour of the day is "most dangerous" according to the data?
+
+3. Answer the question: What is the percentage of incidents where the incident description contains the word `` burglary '' or `` robbery ''? (tip: convert the entire crime description column to lowercase using the `tolower()` function.
+
+4. Print any unique four-digit numbers you can find on street names where a criminal incident is recorded.
+
+***
