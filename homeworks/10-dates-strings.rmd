@@ -15,12 +15,56 @@ The following tasks relate to the data set stored in the CSV file `crimeSample.c
 
 Before solving problems, load the data into the crimes data box and familiarize yourself with the data set (`str`,` head`, etc.)
 
+```{r}
+crimeDf <- read.csv("data/crimeSample.csv", stringsAsFactors = F)
+str(crimeDf)
+head(crimeDf)
+```
+
+
 1. Convert the timestamp column from character type to `POSIXct` type.
+```{r}
+crimeDf$Dispatch_Date_Time <- as.POSIXct(crimeDf$Dispatch_Date_Time)
+str(crimeDf)
+```
+
 
 2. Add the following columns to the data frame: `Year`,` Month`, `Hour`. Fill in the columns with the appropriate information from the timestamp. Answer the question: in what month does the most crime occur? Which hour of the day is "most dangerous" according to the data?
+```{r}
+library(lubridate)
+crimeDf$Year <- year(crimeDf$Dispatch_Date_Time)
+crimeDf$Month <- month(crimeDf$Dispatch_Date_Time)
+crimeDf$Hour <- hour(crimeDf$Dispatch_Date_Time)
 
-3. Answer the question: What is the percentage of incidents where the incident description contains the word `` burglary '' or `` robbery ''? (tip: convert the entire crime description column to lowercase using the `tolower()` function.
+# Q: In what month does the most crime occur? Which hour of the day is "most dangerous" according to the data?
+## Aggregate by month
+countByMonth <- table(crimeDf$Month)
+monthIdx <- which.max(countByMonth)
+month.abb[monthIdx]
+
+cat("----------------------------\n")
+
+## Aggregate by hour
+countByHour <- table(crimeDf$Hour)
+hour <- which.max(countByHour)
+hour
+```
+
+
+3. Answer the question: What is the percentage of incidents where the incident description contains the word  'burglary' or 'robbery'? (tip: convert the entire crime description column to lowercase using the `tolower()` function.
+```{r}
+library(stringr)
+crimeDf$Text_General_Code <- tolower(crimeDf$Text_General_Code)
+occurrences <- nrow(crimeDf[str_detect(crimeDf$Text_General_Code, "(burglary|robbery)"),])
+paste(occurrences / nrow(crimeDf) * 100, "%", sep = "")
+```
+
 
 4. Print any unique four-digit numbers you can find on street names where a criminal incident is recorded.
+```{r}
+streets <- crimeDf$Location_Block
+numbers <- sapply(streets, function(street) str_extract_all(street, "\\d{4}"))
+unlist(unique(numbers))
+```
 
 ***
