@@ -1,0 +1,610 @@
+---
+title: "11 Managing data frames with dplyr package"
+author: "João Conde"
+date: "13 January 2020"
+output:
+  html_document: default
+---
+
+
+***
+
+The specific advantages of the `dplyr` package are:
+
+- simple syntax 
+- higher efficiency 
+- integration with relational databases and big data sources 
+
+The aforementioned basic "five verbs" offered by the `dplyr` package are as follows:
+
+- `filter` - for filtering the dataset by rows
+- `select` - for selecting individual columns
+- `arrange` - for changing the order of the rows
+- `mutate` - for creating new columns from existing ones
+- `summarise` - for data aggregation
+
+In addition to these five basic verbs, we often use:
+
+- `group_by` for grouping data within a dataset
+- the `join` family of functions for merging data frames
+
+
+## Dataset: *Titanic*
+
+We will choose one commonly used dataset - *"Titanic Passenger Survival Dataset"*. This dataset contains information about the passengers of the cruise shipTitanic which sank on 14 April 1912, whereupon only 706 out of 2223 passengers survived. This dataset contains, amongst other things, passengers' names, gender, date of arrival, passenger class, etc. There is a version of this dataset that comes with *R* distribution itself, but we will use its extended version from a *Kaggle* competition *"Titanic: Machine Learning From Disaster"* which can be found more at <a href = "https://www.kaggle.com/c/titanic"> this link</a>.
+
+Let's load this data set using the `read_csv` function, a` readr` package function that "upgrades" the `read.csv` function. Also, instead of the `str` function, let's try to use its equivalent, the `glimpse` function, provided by the `dplyr` package.
+
+***
+
+## Assignment 11.1 - dataset Titanic
+
+`````{r}
+library(dplyr)
+# load the data set from the file `Titanic.csv` into the variable `titanic` using the `read.csv` function from the `readr` package
+# please read the documentation before using the function
+titanic <- readr::read_csv("data/Titanic.csv")
+
+# view the structure of the `titanic` dataframe using the `glimpse` function
+# and check the first few lines with the `head` function
+glimpse(titanic)
+head(titanic)
+
+```
+
+***
+
+Why use the function `read_csv` instead of its counterpart with a similar name, `read.csv`? There are several reasons:
+
+- greater autonomy, i.e. better inference of column types
+- faster processing speed
+- provides status information for easier error detection
+- **no automatic categorization**
+- the loaded object is automatically converted into a "*tibble*"
+
+
+If we want to "upgrade" an existing dataframe to a *tibble*, we can do this with the `as_tibble` command (note that functions in the `tidyverse` collection often contain an underscore `_`, to help distinguish them as upgrades of basic *R* constructs which have similar names but use a dot `.`).
+
+We can fine tune how tibbles get printed by using the `options` function and the parameters `tibble.print_max` and `tibble.width, for example:
+
+```{r, eval = F}
+# I want to see a maximum of 10 rows and always print all columns
+options(tibble.print_max = 10, tibble.width = Inf)
+
+```
+
+An easier way for a one-off printing of more than 10 rows we can simply add a paramter `n` to the default `print` function:
+
+```{r, eval = F}
+# `df` is of class `tbl_df`, I want to see 50 lines printed
+print(df, n = 50)
+```
+
+
+
+***
+
+
+Before proceeding, it would be a good idea to get acquainted with the data set we will be using, either through a more detailed research of the dataset, or by collecting documentation on the dataset. The brief description of the dataset itself, collected from the official Keggle page of the competition, is as follows:
+
+
+```{r, eval = F}
+VARIABLE DESCRIPTIONS:
+survival        Survival
+                (0 = No; 1 = Yes)
+pclass          Passenger Class
+                (1 = 1st; 2 = 2nd; 3 = 3rd)
+name            Name
+sex             Sex
+age             Age
+sibsp           Number of Siblings/Spouses Aboard
+parch           Number of Parents/Children Aboard
+ticket          Ticket Number
+fare            Passenger Fare
+cabin           Cabin
+embarked        Port of Embarkation
+                (C = Cherbourg; Q = Queenstown; S = Southampton)
+
+SPECIAL NOTES:
+Pclass is a proxy for socio-economic status (SES)
+ 1st ~ Upper; 2nd ~ Middle; 3rd ~ Lower
+
+Age is in Years; Fractional if Age less than One (1)
+ If the Age is Estimated, it is in the form xx.5
+
+With respect to the family relation variables (i.e. sibsp and parch)
+some relations were ignored.  The following are the definitions used
+for sibsp and parch.
+
+Sibling:  Brother, Sister, Stepbrother, or Stepsister of Passenger Aboard Titanic
+Spouse:   Husband or Wife of Passenger Aboard Titanic (Mistresses and Fiances Ignored)
+Parent:   Mother or Father of Passenger Aboard Titanic
+Child:    Son, Daughter, Stepson, or Stepdaughter of Passenger Aboard Titanic
+
+Other family relatives excluded from this study include cousins,
+nephews/nieces, aunts/uncles, and in-laws.  Some children travelled
+only with a nanny, therefore parch=0 for them.  As well, some
+travelled with very close friends or neighbors in a village, however,
+the definitions do not support such relations.
+
+```
+
+
+
+At this point, it should be considered whether the dataset includes some categorical data. As we have learned, unlike the `read.csv` function that automatically factorizes all character columns (which is not recommended), the `read_csv` function from the `readr` package does not factorize anything, but rather leaves that to the analyst. While this represents additional work for the analyst, the level of control and robustness that is obtained is more than a sufficient compromise.
+
+In the `titanic` dataset we notice the following categorical variables:
+
+- *Survival* (survival - 2 categories: 0 and 1)
+- *Pclass* (passenger class - 3 categories: 1, 2 and 3)
+- *Sex* (gender - 2 categories: "M" and "F")
+- *Embarked* (port of embarkation - 3 categories: "C", "Q" and "S")
+
+
+Let's factorize the columns listed.
+
+## Assignment 11.2 - factorizing the columns of the Titanic dataset
+
+`````{r}
+# convert the `Survived`,` Pclass`, `Sex` and` Embarked` columns
+# of the `titanic` data frame into factors
+cols <- c("Survived", "Pclass", "Sex", "Embarked")
+titanic[cols] <- lapply(titanic[cols], as.factor)
+
+# briefly explore the `titanic` data frame
+# using the 'glimpse' function
+glimpse(titanic)
+```
+
+
+There is also a more concise way to factorizing columns which leverages the `lapply` function:
+
+```{r, eval = F}
+categories <- c("Survived", "Pclass", "Sex", "Embarked")
+
+titanic[categories] <- lapply(titanic[categories], as.factor)
+
+```
+
+Now that we have a good understanding of our data set and have made the initial preparations in terms of column categorization, we can begin with the introduction of `dplyr` package functions.
+
+
+## Creating a subset of observations with `filter` and` slice`
+
+In the chapter on data frames, we have already learned that "slicing" data frames can be done similar to slicing matrices - using index vectors to define which rows/columns are retained. We have also learned that index vectors can be numerical (location), logical, and character-typed.
+
+When defining a subset of rows, by far the most common type of index vector is logical - with the help of variables, i.e. data frame columns, we define a specific criterion that "filters" the rows. Unfortunately, the basic *R* syntax of using logical index vectors to determine a subset of rows is somewhat clumsy, as can be seen from this example:
+
+```{r, eval = F}
+df[df$a > 5 & df$b != 3,]
+
+```
+
+
+The first and obvious issue is the need to repeat the name of the data frame (which we can eliminate with the help of the `attach` function, which we said was not an ideal solution because it brings a number of new potential problems). The second issue is the readability problem - the above command is not easy to interpret visually, that is, it is not easy to see immediately afte  that it is an instruction which aims to reduce the number of rows in a data frame.
+
+The alternative is to use the `filter` function from the package `dplyr` which uses explicitely indicates that it is filtering rows, and also allows the use of column names without having to reference the name of the data frame:
+
+```{r, eval = F}
+filter(df, a > 5 & b != 3)
+
+```
+
+
+Also, it is good to note that the first argument of the function is the data frame itself, which allows us to easily chain it. Most of the `dplyr` package functions are designed on this principle.
+
+The above function is the most common way to select a subset of rows (readers who are acquainted with the SQL language will notice a similarity to the WHERE segment of SQL queries). In addition to the `filter` function, to specify a subset of rows we want to keep we can also use some of the following functions, which also have very intuitive names (for easier interpretation rather than signature functions, we give examples of parameters):
+
+- `distinct(df)` - for removing duplicates
+- `slice(df, 1:10)` - for location indexing
+- `sample_frac(df, 0.2)` - random selection of a certain percentage of rows
+- `sample_n(df, 50)` - randomly select of a specific number of rows
+- `top_n(df, 10, a)` - returns the first 10 rows, ordered by the values of attribute `a`
+
+We can use the following to rearrange the rows in the result:
+
+- `arrange(df, a, desc(b))` - sort by column `a` in ascending order and then by `b` in descending order
+
+Let's try this in the following examples:
+
+***
+
+## Assignment 11.3 - row selection
+
+```{r}
+library(stringr)
+
+# print information about all first class passengers over 60 years of age
+filter(titanic, Age > 60 & Pclass == 1)
+
+# print information about all surviving male travelers who
+# have `George` or` Frank` in their name
+filter(titanic, Survived == 1 & str_detect(Name, "(George|Frank)") & Sex == "male")
+
+# check whether the dataset contains duplicate observations
+nrow(titanic) == nrow(distinct(titanic))
+
+# randomly select and print information about five passengers who
+# have not survived the sinking
+# print order in descending order of ticket price
+titanic %>% filter(Survived == 0) %>% sample_n(5) %>% arrange(desc(Fare))
+
+# print information about the five oldest first class passengers
+# arrange the result in ascending order of age
+titanic %>% filter(Pclass == "1") %>% top_n(5, Age) %>% arrange(Age)
+```
+
+
+
+
+***
+
+
+Notice that the `top_n` function returns the "first n" rows but does not necessarily arrange them in that order. If we want them arranged we also need to use the `arrange` function.
+
+## Creating a subset of columns with `select`
+
+Another method of slixing a data frame selecting a subset of columns. Unlike selecting a subset of rows, where we most often use logical indexing, columns or variables are most often referenced by their name. The syntax for selecting a subset of columns by name using the basic indexing method in *R* looks like this:
+
+```{r, eval = FALSE}
+df[, c("a", "b", "c")]
+```
+
+
+Here we also notice a certain clumsiness in the syntax and difficulty in interpretation. Column names must be wrapped in a `c` function, which reduces readability, and the command doesn't explicitly state that it is selecting columns of the data frame, we have to conclude it from the position of the index vector. In addition, there is no easy way to select a range of columns by name, the existence of a substring or pattern within the name, etc.
+
+The `select` function allows us to explicitly select columns using syntax:
+
+```{r, eval = FALSE}
+select(df, a, b, c)
+```
+
+
+
+So we simply list the data frame and the row of columns we want to select. It is also notice the similarity to SQL, specifically the SELECT part of SQL queries.
+
+But the above syntax is not all that this feature has to offer - `select` has a number of helper functions and operators that greatly extend its functionality, such as:
+
+- `select(df, a:c)` - select columns from `a` to` c`
+- `select(df, -a, -b)` - select all columns except `a` and` b`
+- `select(df, starts_with("PO")))` - select columns beginning with the letters `"PO"`
+- `select(df, contains("col"))` - select columns containing the letters`"col"`
+- `select(df, matches("[123]{2,3}"))` - select columns that match the given regular expression
+
+Additional options are easy to find in the official documentation.
+
+Let's try this command, also on our dataset.
+
+***
+
+## Assignment 11.4 - selecting the columns
+
+```{r}
+# for randomly selected 10 rows, print the passenger's name, age and
+# whether he survived the sinking or not
+titanic %>% sample_n(10) %>% select(Name, Age, Survived)
+
+# for the 10 oldest passengers, print all attributes from name to ticket price
+titanic %>% top_n(10, Age) %>% select(Name:Fare)
+
+# print all attributes except for the identifier and cabin number
+# for a randomly selected 1% of rows
+titanic %>% sample_frac(0.01) %>% select(-PassengerId, -Cabin)
+
+# for rows from number 10 to number 20, print out all columns beginning with a vowel
+titanic %>% slice(10:20) %>% select(matches("^[AEIOUaeiou]"))
+
+# for randomly selected 10 passengers whose age is unknown, print all
+# attributes from name to ticket price, then the passenger class 
+# and finally whether or not the passenger survived
+# sort the rows alphabetically by name
+titanic %>% filter(is.na(Age)) %>% sample_n(10) %>% select(Name:Fare, Pclass, Survived) %>% arrange(Name)
+```
+
+***
+
+## Creating new columns with `mutate`
+
+When working with datasets, there is often a need to create additional variables with the help of information stored in one or more existing variables. Most often, we create a new column using an expression that describes how we transform existing data; motivation can be the normalization of a numerical variable, the creation of an indicator or categorical variable, the summation of multiple variables into one single variable, or any other transformation in order to obtain a new variable that is in some way required for the further steps of the analysis process.
+
+Assuming that we want to create a new column that stores the sum of two numerical values of the existing columns, then the base *R* syntax might look as follows:
+
+```{r, eval = F}
+df$c <- df$a + df$b
+```
+
+
+The `dplyr` package offers us an alternative in the form of` mutate` and `transmute` functions:
+
+```{r, eval = F}
+mutate(df, c = a + b)
+
+transmute(df, c = a + b)
+```
+
+
+Difference between these two function is that  `mutate` returns the entire original data frame with newly created columns, while `transmute` retains only the columns specified inside the function call. Therefore, we can use `transmute` as a shortened combination of `mutate` and `select`:
+
+
+```{r, eval = F}
+transmute(df, a, c = a + b)
+# same as mutate(df, c = a + b) %>% select(a, c)
+```
+
+
+(NOTE: We don't have to necessarily expect a degradation of peformance here as a result of copying data frames, since *R* does a "shallow copy" when adding a column, that is, a new data frame only references a new column while retaining references to the remaining columns. If we were creating a "deep copy", i.e. if we were copying all columns into the new frame, which would make this operation "expensive" when it comes to processing)
+
+Note that `mutate` and` transmute` are not alternatives to the *UPDATE* command from *SQL*, but rather correspond to the expressions used in the *SELECT* [segment of the command in scenarios when we do not select individual columns but combine them as part of an expression part of the SQL *query*.
+
+The `mutate` and `transmute` functions use common (vectorized) functions and operators, but we also have a number of additional so-called  "window"  functions that give us additional flexibility when creating new variables, such as:
+
+- `ntile`,` cut` - for transforming a numerical column into a categorical; `ntile` will make categories of the same size, while `cut` will cut the range in equally sized intervals
+- `dense_rank`,` min_rank` - for ranking of observations (the difference is only in handling observations with the same values)
+- `between` - for creating an indicator column explaining whether a given variable is in the interval given by two other columns
+- `pmin`,` pmax` - "parallel minimum and maximum", ie the minimum or maximum values of the selected columns viewed by individual rows
+- etc.
+
+A list of all available functions can be found in the documentation.
+
+***
+
+## Assignment 11.5 - creating new columns
+
+
+```{r}
+
+# add a `hadRelativesOnBoard` logical column to the` titanic` table which 
+# describes whether the passenger had relatives on board
+titanic <- mutate(titanic, hadRelativesOnBoard = SibSp > 0 | Parch > 0)
+
+# for randomly selected 10 passengers over the age of 20 who boarded in Southampton
+# print out passenger's name, travel class, and transformed ticket price
+# replace the ticket price with what it would cost today
+# (assume $1 of 1912 equals $23.85 today, calculating in the inflation)
+# call the new column `FareToday` 
+# round the amount to two decimal places and add the prefix `$`
+# sort the result by passenger class in descending order
+titanic %>% filter(Age > 20) %>% sample_n(10) %>% transmute(Name, Pclass, FareToday = str_c("$", round(Fare * 23.85, 2))) %>% arrange(desc(Pclass))
+
+# create a `FareCategory` column which puts the ticket prices
+# into five equally sized categories
+# then randomly select 20 passengers and print
+# passenger name, travel class, ticket price and category
+# sort the result by price category
+titanic %>% mutate(FareCategory = ntile(Fare, 5)) %>% sample_n(20) %>% select(Name, Pclass, Fare, FareCategory) %>% arrange(FareCategory)
+
+# add an `EmbarkationPort` column to the `titanic` table, which will contain
+# the full name of the port of embarkation (Southampton (S), Queenstown (Q) or Cherbourg (C))
+# use `mutate` and two `ifelse` functions
+titanic <- mutate(titanic, EmbarkationPort = ifelse(Embarked == "S", "Southampton", ifelse(Embarked == "Q", "Queenstown", "Cherbourg")))
+
+# print the first 10 rows of the `titanic` table
+head(titanic, 10)
+```
+
+
+
+
+## Sample Dataset: *Houston flights*
+
+Let's now load the `hflights` data frame, which is in a package of the same name and can be retrieved from the CRAN repository. After loading the package, we can move the data frame to the global environment with the help of the `data` function.
+
+***
+
+## Assignment 11.6 - dataset hflights
+
+`````{r}
+# load the `hflights` package
+# if necessary install it from the CRAN repository
+# put the `hflights` data frame in the global environment using the `data` function
+library(hflights)
+data(hflights)
+
+# convert the frame to `hflights` into a 'tibble'
+hflights <- as_tibble(hflights)
+
+# briefly explore the `hflights` dataset
+# you can also check the documentation with the help of command `?hflights`
+glimpse(hflights)
+head(hflights)
+```
+
+***
+
+## Grouping and aggregation with `group_by` and` summarise`
+
+In the data analysis literature, we will often come across a so-called SAC paradigm (*Split-Apply-Combine*). It's a strategy that comes down to breaking down a big task into smaller parts, doing some work on each part, and finally combining all the results into a single whole. The need for this paradigm is found in different analysis scenarios - in exploratory data analysis we will want to calculate different statistics or create new variables separately for different subsets of data (eg, depending on a category variable); When processing extremely large amounts of data, we often want to speed up the processing process by breaking the data into smaller sets that will each be processed separately (the well-known *Map-Reduce* principle).
+
+Users of *SQL* will easily recognize this principle as grouping and aggregation, which are carried out through the *GROUP BY* segment of an *SQL* query with the accompanying elements in the *SELECT* part. The `dplyr` package offers very similar functionality (albeit in a procedural way) - we first perform "grouping", i.e. create subsets of rows of a frame, and then carry out further processing in parallel over each subset, to collect all the results in a single dataframe.
+
+For grouping, `dplyr` offers the` group_by` function, which converts a table (data frame) into a `grouped table (`grouped_tbl`):
+
+```{r, eval = F}
+group_by(df, a, b, c)
+```
+
+Let's try this feature on our `hflights` framework.
+
+***
+
+
+## Assignment 11.7 - grouped table
+
+
+```{r}
+# create a `flight815` variable that will contain rows from the `hflights` data frame
+# related to flight number 815
+flight815 <- filter(hflights, FlightNum == 815)
+
+# create a `grouped815` variable that will contain rows from `flight815`
+# grouped by month
+grouped815 <- group_by(flight815, Month)
+
+# check the class of variables `flight815` and `grouped815`
+class(flight815)
+class(grouped815)
+
+# briefly explore the `flight815` and `grouped815` variable structures 
+# with the help of the `glimpse` function
+glimpse(flight815)
+glimpse(grouped815)
+```
+
+
+***
+
+
+We see that by grouping we have not "lost" any information - the grouped data frame still looks identical to the original, "non-grouped" frame. In fact, the only indication that something is different is the new, inherited class and the `Groups: ..` line in the structure print. This means that grouping a frame is merely an indication that some further (most often aggregation) operations are not necessarily performed over the entire data frame, but over individual groups. Also, if we want, we can always easily "ungroup" the frame with the help of the `ungroup` function.
+
+For aggregation, we use the `summarise` function that receives data (a grouped table) and then combinations of aggregation functions and columns over which they are executed, for example:
+
+```{r, eval = F}
+summarise(df, meanA = mean(a), sdA = sd(a))
+```
+
+
+As a rule, for the aggregation function we can use any function that reduces a vector to a single value (eg `mean`,` max`, `sd` etc.). Also, `dplyr` offers some useful functions like:
+
+- `first`,` last`, `nth` - retreieves the first, last, or n-th element of the group
+- `n`,` n_distinct` - counts the number of (distinct) values
+
+
+***
+
+
+## Assignment 11.8 - function summarise
+```{r}
+# calculate the average flight arrival delay for the data frames `flight815` and` grouped815`
+# use the `summarise` function
+summarise(flight815, meanDelay = mean(ArrDelay))
+summarise(grouped815, meanDelay = mean(ArrDelay))
+```
+
+Note that it is advisable to name the aggregated columns.
+
+***
+
+
+
+In practice, we usually do not create separate "grouped" data frames but rather we carry out the entire process of selecting rows and columns, grouping, and performing aggregation in a single command. If we use the operator `%>%`, then it a possible example might look like this:
+
+```{r, eval = F}
+filter(df, a> 5) %>% group_by(a, b) %>% summarise(meanC = mean(c)) %>% arrange(desc(b))
+```
+
+
+Finally, let us reiterate the readily apparent similarity of the above expression with *SQL* queries in relational databases, with the essential difference that we perform operations here procedurally, which greatly increases readability and allows us to easily store and check the intermediate result at any time.
+
+Now let's try to take advantage of all the current knowledge of the `dplyr` package and solve the following examples. All tasks are related to the entire `hflights` dataset.
+
+***
+
+
+## Assignment 11.9 - advanced queries
+
+```{r}
+# print out how many flights were canceled because of
+# bad weather in each month
+# result table must contain only columns called
+# `Month` and` BadWeatherCancellations`
+hflights %>% filter(CancellationCode == "B") %>% group_by(Month) %>% summarise(BadWeatherCancellations=sum(Cancelled))
+
+# print out the average time of arrival delay
+# for departing flights to airports
+# LAX, JFK and LGA on different days of the week
+# name the new column 'MeanArrDelay'
+# ignore rows with NA values
+# sort the result by descending average delay time
+hflights %>% filter(!is.na(ArrDelay) & Dest %in% c("LAX", "JFK", "LGA")) %>% group_by(DayOfWeek, Dest) %>% summarise(MeanArrDelay = mean(ArrDelay)) %>% arrange(desc(MeanArrDelay))
+
+```
+
+
+
+
+## Assignment 11.10 - advanced queries (2)
+
+```{r}
+# in the tasks that follow, imagine you wrote your own 
+# function that finds the most common category:
+mostFreqValue <- function(x) table(x) %>% sort(decreasing = T) %>% names %>% `[`(1)
+
+
+# in the `hflights` table, divide the delay time
+# in 10 categories with the help of the `ntile` function
+# call the new column `ArrDelayCatId`
+# then print all the category ids,
+# total number of flights within a category,
+# minimum and maximum time of arrival delay
+# and which airport most often
+# appears in this category
+hflights %>% mutate(ArrDelayCatId = ntile(ArrDelay, 10)) %>% group_by(ArrDelayCatId) %>% summarise(totalFlights = n(), minArrDelay = min(ArrDelay), maxArrDelay = max(ArrDelay), mostFreqDest = mostFreqValue(Dest))
+
+# repeat the previous example but instead of the function
+# `ntile` try the` cut` function
+hflights %>% mutate(ArrDelayCatId = cut(ArrDelay, 10)) %>% group_by(ArrDelayCatId) %>% summarise(totalFlights = n(), minArrDelay = min(ArrDelay), maxArrDelay = max(ArrDelay), mostFreqDest = mostFreqValue(Dest))
+```
+
+
+
+***
+
+## Merging data frames with join functions
+
+Merging data frames is an operation known to all developers who have experience in working with relational databases and *SQL*. When stored in a relational database, tables are often decomposed into multiple tables by a process called "normalization". The purpose of normalization is mainly to eliminate unnecessary redundancy - each table retains enough data to reconstruct the original data, i.e. sets of observations, which is done through the "join" operation.
+
+Although there are different forms of joining tables, by far the most common is the so-called a "natural" join where we have unique identifiers in one table related to the data in the other table. For example - suppose we have a `student` and `city` tables, where a `student` table may have a column that stores the zip code of the user's place of residence, while other location-related information is in the `city` table. Storing this information in the `students` table would be redundant, since the zip code as such uniquely identifies a city, and if we want to see the names of the cities when printing users, we perform a natural join of two tables by the zip code of the city. This zip code is the so-called "foreign key" in the `student` table and at the same time "primary key" in table `city`.
+
+We will create two simple data frames to demonstrate this.
+
+```{r}
+# initializing the `user` and` place` data frames
+
+student <- data.frame(id = c(1: 3), lastName = c("Ivic", "Peric", "Anic"),
+                        zipResidence = c(10000, 31000, 10000))
+
+city <- data.frame(zip = c(10000, 21000, 31000),
+                      nameCity = c("Zagreb", "Split", "Osijek"))
+
+
+```
+
+
+If we want to have a data frame with columns *(id, lastName, zipResidence, nameCity)*, then we need to naturally merge the two data frames. For this, the `dplyr` package offers the` inner_join` function. For example, if we want to join data frames `df1` and `df2`, then we can perform the natural join like this:
+
+```{r, eval = F}
+inner_join(df1, df2, by = c("s1" = "s2"))
+```
+
+
+where the character strings `"s1"` and `"s2"` denote the column names of these "left" and "right" frames that we are joining (note only one equality sign! ). If the column we use has the same name in both tables, we can only specify the name of that column (or the character vector of multiple columns if we connect via a so-called "composite" foreign key), or omit this parameter completely (if the columns to which we perform merging are the only columns whose names match).
+
+***
+
+
+## Assignment 11.12 - natural join
+
+```{r}
+# print the result of natural joining of data frames `student` and `city`
+inner_join(student, city, by = c("zipResidence" = "zip"))
+```
+
+
+***
+
+
+Keep in mind that joining is a very "expensive" operation; if you join frames with a very large number of rows, the operation could take a very long time and take up a lot of memory. In the event that such "large" joins are often required, then it is strongly recommended to use the `data.table` package, which implements algorithms with significantly better performance in join operations (using indexing), or - if we work with relational database as a data source - perform the joins on the database side and then pull the result in *R*. In the next section, we will show how this can potentially be done without having to explicitly write separate *SQL* commands.
+
+If we look at the result of the example above, we can see that we "lost" one row from the `city` table. Specifically, line *(21000, 'Split')* had no corresponding student and "disappeared" from the result. This is a completely expected result of a natural join, but there are times when we want to keep all the rows from one of the tables we merge. In this case, we have the option of using the so-called "outer natural join" which works identically to the "inner" natural join that we have already seen, but retains all rows from one or both of the tables so that the rows that fail to join remain in the result but with `NA` values on the opposite side. We distinguish between "left", "right", and "full" outer join, depending on whether we want to keep all rows from the left, right or both tables. The `dplyr` package offers functions that perform all these types of joins, they have a signature identical to the function seen above and are called` left_join`, `right_join` and` full_join`.
+
+***
+
+
+## Assignment 11.13 - outer join
+
+```{r}
+# print the result of natural joining of data frames `student` and `city`
+# which retains all rows from the `city` table
+right_join(student, city, by = c("zipResidence" = "zip"))
+```
+*****

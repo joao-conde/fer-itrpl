@@ -1,0 +1,40 @@
+---
+title: "Homework11 - Managing data frames with dplyr package"
+author: "João Conde"
+date: "14/01/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Exercises {-}
+
+IThe following exercises use the *mammals sleep* dataset available in the visualization package `ggplot2`. Load the `ggplot2` package and then put the `msleep` data frame in the global environment using the `data` function.
+
+Before solving the exercises be sure to explore the dataset and learn its features. Then do the following
+
+1. For 10 herbivores who sleep the longest, print their name, how many hours per day they sleep and their average body weight in kg. Sort the entries by sleep length in a descending order.
+
+2. Print the average, longest and shortest sleep time of the animals depending on their type of diet.
+
+3. Categorize the total sleeping time in 5 bins of equal length. For each category, print the total number of animals belonging to the category, and then the total number of class members who are not herbivores. Results should be sorted by sleep length in a descending order. Columns should have meaningful names and the final table should not contain NA values.
+
+4. The following data frame contains the status codes for animal conservation status and their descriptions:
+
+
+```{r}
+conservationStatus <- data.frame( 
+  code = c("ex", "ew", "cr", "en", "vu", "nt", "cd", "lc"),
+  description = c("extinct", "extinct in the wild", 
+                 "critically endangered", "endangered",
+                 "vulnerable", "near threatened", 
+                 "conservation dependent", "least concern"))
+
+```
+
+Add a `conservationDesc` column to ¸the `msleep` dataframe which will contain the correspoding conservation status descriptions. Be sure not to lose any rows from the `msleep` data frame.
+
+***
