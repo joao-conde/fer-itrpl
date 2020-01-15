@@ -12,29 +12,49 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Exercises {-}
 
-IThe following exercises use the *mammals sleep* dataset available in the visualization package `ggplot2`. Load the `ggplot2` package and then put the `msleep` data frame in the global environment using the `data` function.
+The following exercises use the *mammals sleep* dataset available in the visualization package `ggplot2`. Load the `ggplot2` package and then put the `msleep` data frame in the global environment using the `data` function.
 
 Before solving the exercises be sure to explore the dataset and learn its features. Then do the following
+```{r}
+library(ggplot2)
+library(dplyr)
+data("msleep")
+glimpse(msleep)
+head(msleep)
+```
 
 1. For 10 herbivores who sleep the longest, print their name, how many hours per day they sleep and their average body weight in kg. Sort the entries by sleep length in a descending order.
+```{r}
+msleep %>% filter(vore == "herbi") %>% top_n(10, sleep_total) %>% select(name, sleep_total, bodywt) %>% arrange(desc(sleep_total))
+```
 
 2. Print the average, longest and shortest sleep time of the animals depending on their type of diet.
+```{r}
+msleep %>% filter(!is.na(vore)) %>% group_by(vore) %>% summarise(AvgSleep = mean(sleep_total), LongestSleep = max(sleep_total), ShortestSleep = min(sleep_total))
+```
 
 3. Categorize the total sleeping time in 5 bins of equal length. For each category, print the total number of animals belonging to the category, and then the total number of class members who are not herbivores. Results should be sorted by sleep length in a descending order. Columns should have meaningful names and the final table should not contain NA values.
+```{r}
+msleep %>% mutate(TotalSleepCatId = ntile(sleep_total, 5)) %>% group_by(TotalSleepCatId)  %>% summarise(TotalSleep = sum(sleep_total), TotalAnimals = n(), TotalNotHerbivores = length(which(vore  != "herbi"))) %>% arrange(desc(TotalSleep)) #%>% select(TotalSleepCatId, TotalAnimals, TotalNotHerbivores)
+```
 
 4. The following data frame contains the status codes for animal conservation status and their descriptions:
-
-
 ```{r}
 conservationStatus <- data.frame( 
   code = c("ex", "ew", "cr", "en", "vu", "nt", "cd", "lc"),
   description = c("extinct", "extinct in the wild", 
                  "critically endangered", "endangered",
                  "vulnerable", "near threatened", 
-                 "conservation dependent", "least concern"))
+                 "conservation dependent", "least concern"), stringsAsFactors = F)
 
 ```
 
-Add a `conservationDesc` column to ¸the `msleep` dataframe which will contain the correspoding conservation status descriptions. Be sure not to lose any rows from the `msleep` data frame.
+Add a `conservationDesc` column to the `msleep` dataframe which will contain the correspoding conservation status descriptions. Be sure not to lose any rows from the `msleep` data frame.
+```{r}
+nrow(msleep)
+msleep <- left_join(msleep, conservationStatus, by = c("conservation" = "code"))
+nrow(msleep)
+head(msleep)
+```
 
 ***
