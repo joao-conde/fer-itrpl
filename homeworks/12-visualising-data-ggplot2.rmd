@@ -1,0 +1,64 @@
+---
+title: "Homework12 - Visualising data with `ggplot2` package"
+author: "João Conde"
+date: "18/01/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Exercises {-}
+
+1. Load the `diamonds` data frame which comes with the `ggplot2` package.
+
+a) Show the diamond price distribution with the aid of two graphs - a histogram and the so-called. *frequency polygons * (function `geom_freqpoly`)). Divide the prices into 10 bins.
+
+b) add the "clarity" of the diamond to the graphs from a) (the `clarity` column) which you will set to the `fill` aesthetics ('histogram') or `color` aesthetic (frequency polygons). Do you see any difference pertaining to the default position aspect?
+
+
+2. Load the `mpg` dataset. Then find the graphs called `2a.pdf`, `2b.pdf` and `2c.pdf` in the folder of this homework assignment. Try to reconstruct them. If you do not recognize the geometry used, try to consult the RStudio ggplot2 cheat sheet.
+
+
+3. Adjust the scale aspect of the following graph in the following fashion:
+   a) the x axis should be called `"the number of cylinders"`
+   b) the y axis should be called `"total"` and should have its range expanded to 100
+   c) the legend should be named `"year"`
+   b) the rectangles color should use the `Dark2` palette
+
+
+```{r}
+ggplot(mpg, aes(x = as.factor(cyl), 
+                fill = as.factor(year))) + geom_bar()
+```
+
+4. Change the theme of the next graph as follows:
+     a) use the theme which is suitable for use with a projector
+     b) turn the x axis labels vertically
+
+```{r}
+ggplot(mpg, aes(x = as.factor(trans), y = displ)) + 
+  geom_boxplot() 
+```
+
+
+5. The following graph shows the highway miles per gallon consumption histogram, with the color of the rectangle reflecting the number of cylinders. Try to improve the graphs' interpretability by replacing the aesthetics of color and using  multiple graphs that are conditioned by the number of cylinders. Organize the graphs in a 2 x 2 matrix.
+
+```{r}
+ggplot(mpg, aes(hwy, fill = as.factor(cyl))) + 
+  geom_histogram(bins = 10, position = "dodge")
+```
+
+
+6. Assume you have the following data frame:
+
+```{r}
+sales <- data.frame(month = 1:12,
+          total = c(10000, 5000, 12000, 3000, 5000, 7000, 
+                   10000, 2000, 4000, 8000, 11000, 14000))
+```
+  
+and you visualize it with a bar graph. However, the `geom_bar` function by default  uses only one variable and automatically calculates the `count` statistics. How to solve this problem? Suggest a solution and create the appropriate bar graph.
+
+***

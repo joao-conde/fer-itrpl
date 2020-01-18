@@ -1,0 +1,806 @@
+---
+title: "12 Visualising data with `ggplot2` package"
+author: "João Conde"
+date: "18 January 2020"
+output:
+  html_document: default
+---
+
+***
+
+
+## Assignment 12.1 - `plot` function
+
+```{r}
+x <- 1:50
+# pass arguments `x` and `x * x` to the `plot` function
+
+```
+
+***
+
+## Grammar of graphics and the `ggplot2` package
+
+*Grammar of graphics* gives us the following:
+
+- principles that enable the creation and interpretation of complex visualizations
+- guidelines to understand what represents a "well-crafted" visualization
+
+
+## Aspects of data, aesthetics and geometries
+
+To begin with, let's introduce a simplified grammar model which uses three basic components:
+
+- data (which we want to visualize)
+- aesthetics (which describe how to map data to graph elements)
+- geometries (which describe how graph elements appear visually)
+
+
+***
+
+## Assignment 12.2 - getting acquainted with `mtcars` dataset
+
+```{r}
+# load the `mtcars` dataframe into the global environment
+
+# briefly explore the `mtcars` dataset (glimpse, head ...)
+```
+
+
+
+
+***
+
+We can see that this data describes the characteristics of 32 (old) cars such as: weight, maximum speed, horsepower, number of cylinders and the like.
+
+Since some of the variables in this dataset have a numeric datatype even though a categorical type would be more suitable, before we continue we can first factorize these variables. While we are doing this, we can also demonstrate a few as yet unused parameters and functions which help with the categorization - the `labels` parameter which allows "relabeling" of categories (according to the numerical and alphabetical order of the original categories) and the `ordered` function which is simply a shorthand way to convert a numerical variable into a categorical with the natural order of numbers being used as a template for ordering category levels.
+
+```{r}
+mtcars$vs <- factor(mtcars$vs, labels = c("V", "S"))
+mtcars$am <- factor(mtcars$am, labels = c("automatic", "manual"))
+mtcars$cyl  <- ordered(mtcars$cyl)
+mtcars$gear <- ordered(mtcars$gear)
+mtcars$carb <- ordered(mtcars$carb)
+```
+
+
+***
+
+When we create a `ggplot2` visualization it often helps to think about the "layers" of the graph. Each layer in some way "overlays" a graph like a transparent sheet, which allows us to place multiple different types of data representations on the same graph (e.g. we show points and then also connect them with a line).
+
+Let's say we're interested in the relationship between car weight and its fuel consumption. An intuitive way of visualizing would be:
+
+* car weight (`wt`) on the `x` axis of the graph
+* fuel consumption (`mpg`) on the `y` axis of the graph
+
+Let's now create a *scatterplot* showing the relationship between the weights and fuel consumption values of cars as described by the `mtcars` dataset.
+
+***
+
+## The first `ggplot2` graph
+
+
+```{r}
+ggplot() +
+layer (data = mtcars, # 1. data
+       mapping = aes(x = wt, y = mpg), # 2. mapping / aesthetics
+       geom = "point", # 3. geometry
+       stat = "identity", # ignore for now
+       position = "identity") # ignore for now
+```
+
+
+
+We then add "layers" to this object using the `layer` function. We add a layer to the object with the help of the operator `+`, which is ubiquitous when creating `ggplot` graphs. This layer as such has those grammatical aspects that we discussed earlier - *data*, *aesthetics*, and *geometry*. In the call, we see two more aspects of graphic grammar - *statistics* and *position* - which we will explain later in this chapter; for now it suffices to say that `identity` corresponds to 'leave it as is', that is, we are not using some additional processing within the visualization process which may be provided by these aspects if needed.
+
+In the following example we can see this "shorthand" way of creating a `ggplot` graph:
+
+```{r}
+# first `ggplot` graph, abbreviated graph construction method
+ggplot(mtcars, aes(x = wt, y = mpg)) + geom_point()
+```
+
+
+Now let's go back to our graph - what if we wanted to add an extra variable on it? For example, we can see that all cars have either 4, 6 or 8 cylinders, and we want to communicate this information of our graph. Would this mean that we need to add a third dimesion to our two-dimensional graph? Not necessarily - we can simply use some of the unused aesthetics so far, such as *color*, *size* or *shape* of the points.
+
+
+***
+
+## Assignment 12.3 - the shape aesthetic
+
+```{r}
+# create a `ggplot` graph of the `mtcars` dataset with mappings: x = wt, y = mpg, shape = cyl
+# use point geometry
+# what happens if we put `as.numeric(cyl)` instead of the categorical variant?
+```
+
+
+
+***
+
+## Assignment 12.4 - the color aesthetic
+
+```{r}
+# create the same graph, but instead of the `shape` aesthetic, use the `color` aesthetic
+```
+
+
+
+***
+
+## Assignment 12.5 - combining aesthetics
+
+```{r}
+# create the same graph, but now for the `cyl` column, combine both the `shape` and `color` aesthetics
+```
+
+
+***
+
+By comparing the graphs, we can conclude that the color communicates information much better than the shape, which means that it is often the preferred aesthetic (but not appropriate if our graphs have to be in black and white). Also, notice that we can easily combine two aesthetics over the same variable if we wanted.
+
+***
+
+#### The `labs` function
+
+We have seen that `ggplot` automatically creates a legend for its aesthetics and that it names the axes with a variable name ( axes *x* and *y* are also "legends" of sorts). If we want to manually name axes and legends, and perhaps add a title to the graph, we can use the `labs` function, which we also add as a new layer using the following syntax:
+
+```{r, eval = F}
+ggplot(...) + ...
+
++ labs (x = "x axis title", y = "y axis title", title = "Graph Title")
+
+```
+
+Let's try this in the next assignment.
+
+## Assignment 12.6 - `labs` function
+
+
+```{r}
+# rename axes and legend of the following graph
+# and add a suitable title (something that succintly describes what the graph represents)
+ggplot(mtcars, aes (x = wt, y = mpg, color = cyl, shape = cyl)) + geom_point()
+
+```
+
+
+
+
+***
+
+### Fixed geometry parameters
+
+
+Correct example of changing the "global" color of points:
+
+```{r}
+ggplot(mtcars, aes(wt, mpg)) + geom_point(color = "blue")
+
+```
+
+
+Example which uses the **wrong** syntax:
+
+```{r}
+#ggplot will do the mapping of the word "blue" to the `color` aesthetic
+ggplot(mtcars, aes(wt, mpg)) + geom_point(aes(color = "blue"))
+
+```
+
+
+
+***
+
+## Assignment 12.7 - fixed geometry parameters
+
+```{r}
+# draw a scatterpolot showing the relationship between `wt` and `mpg`
+# make the points red, and set their shape to `4` and size to `3`
+```
+
+
+***
+
+### The aspects of statistics and position
+
+Let's look again at the graph we keep drawing. What if instead of a scatterplot we opted for a different geometry, one that shows the relationship between weight and fuel consumption with connected lines?
+
+Try adding a line geometry layer to this graph. You can use the `layer` function with the `geom` parameter set to  `line`, but the more popular approach is to use the `geom_line` helper function, which works similar to the `geom_point` function. Since we keep recycling the same foundation for our graph, we can first save it to an object before adding layers to it.
+
+***
+
+## Assignment 12.8 - adding a line layer
+
+```{r}
+# we store the foundation of our graph in a variable called `graph`
+graph <- ggplot(mtcars, aes (x = wt, y = mpg))
+
+# add the point geometry followed by the line geometry to this object and print it on screen
+```
+
+
+
+
+***
+
+
+**Statistic** is an aspect of the grammar of graphics that performs some additional calculations over a dataset before visualizing it. While we can always manually perform these calculations, usually it's much more convenient to let them be calculated automatically, especially if said calculations are only for one-time use in our visualization (e.g. a *bar chart* which shows the frequencies of a categorical variable using the height of columns).
+
+Mostly statistics perform some sort of aggregation (although not always). Some of the more commonly used statistics are:
+
+* `count` - counting occurrences (for categorical variables)
+* `bin` - binning occurrences in trays and then counting (for continuous numerical variables)
+* `smooth` - "smoothing", i.e. "averaging" using the selected method (usually` lm` for linear or `loess` for curved smoothing)
+* `unique` - removing duplicates
+* `identity` - direct mapping, i.e. "leaving it as is"
+
+These are just some of the statistics, and more can be found in the documentation.
+
+Each statistic has its own helper function that follows the form of `stat_<statistic_name>` and which creates its own layer related to that statistic.
+
+Let us return to our graph of weight vs consumption, but this time instead of adding a layer of linear geometry, we add a layer that will display "smoothing" (i.e. the  `smooth` statistics). This is a good example of using how the statistic aspect works - instead of connecting the points directly with a line, a special function will "average" the values and then connect these averaged values with a (curved or straight) line. To achieve this, we leverage the `stat_smooth` function, which - if we use default parameters - will create a new layer with a "smoothed" representation of the *y* variable according to the *x* variable, using the so-called `loess` method, while also displaying the confidence intervals. 
+
+***
+
+## Assignment 12.9 - linear smoothing
+
+```{r}
+# add the point geometry to the variable `graph`
+# then add a linear smoothing layer
+# use the `stat_smooth` function
+# with the `method` parameter set to `lm` (linear smoothing)
+```
+
+
+
+***
+
+## Assignment 12.10 - ‘loess’ smoothing
+
+```{r}
+# repeat the process but se the smoothing method to `loess`
+```
+
+
+***
+
+
+## Assignment 12.11 - the group aesthetic
+
+
+```{r}
+# create the same graph again
+# but while creating a smoothing layer
+# add the `group` aesthetic and set it to `cyl`
+# What have we achieved by doing this?
+```
+
+
+***
+
+In the last example we witnessed the so-called `group` aesthetic in action. It works similar to the *group_by* function in SQL or `dplyr`, that is, it performs aggregations (or more generally the statistic aspect) over the subgroups defined by the variable instead of the entire dataset. By using this aesthetic, we can show separate calculations in the graph according for each selected group, like in this example where the smoothing is done for each subgroup of cars which share the same number of cylinders.
+
+Certain  visualizations will automatically set the "group" aesthetic when we put a categorical variable on some other aesthetic (like the "color" or "shape"). This can interfere with our statistic aspects we want to add, especially if we want to perform them over the entire dataset. In that case the easiest solution is to set the `group` aesthetic to the number `1`, which will be interpreted as "there is just one big group" and will encompass the entire dataset when calculating the statistic aspect.
+
+***
+
+### The relationship between geometry and statistics
+
+As a rule, certain geometries naturally use "their" statistics (for example, a bar chart naturally uses the statistics which counts the category frequencies). In practice, this means that when we add "statistical" layers, we can choose to use either the *stat* or *geom* helper function and the result will be identical, since both functions use the appropriate default geometry/statistics. For example, `geom_bar` uses the `count` statistic by default, and will give the same result as using `stat_count` which has the geometry set to `bar`.
+
+Which helper functions should we lean toward to then, `stat` or` geom`? In practice, `geom 'functions are used somewhat more often, mostly because of the slightly more consistent syntax of graph construction, but ultimately the choice is irrelevant if the result is the same.
+
+Let's now create a bar chart of the number of cylinders in cars described in the `mtcars` dataset. For this we willl use the `geom_bar` helper function and its preset `count` statistic.
+
+***
+
+## Assignment 12.12 - bar chart
+
+```{r}
+# draw a bar chart of the `cyl` variable from the `mtcars` table
+# use either the `geom_bar` or `stat_count` function
+```
+
+
+***
+
+We can use a similar representation for our numerical variable. Unlike a bar chart, which directly counts the occurencies of different categories, with numerical variables we first need to group values into so-called *bins*. After counting the number of observations in each bin we build a graph called a *histogram*. Again, this is done automatically using  the `bin` statistic, and all we need to do is call the `geom_histogram` function and specify the number of bins.
+
+***
+
+## Assignment 12.13 - histogram
+
+```{r}
+# draw a histogram of the variable `wt` from the` mtcars` table
+# group the weights into 4 bins 
+# use the `geom_histogram` function and the `bins` parameter
+```
+
+
+
+***
+
+How does the statistical aspect work "under the hood"? As a rule, one or more new (most commonly aggregated) variables are calculated based on existing variables and then temporarily added as additional columns in the data frame. In the documentation we can find specific information about the names of these new variables and their meaning. For example, if we look at the documentation for the `stat_bin` function, we can see that it creates the variables named `count`, `ncount`, `density` and `ndensity`. Any of these variables can be used as a height attribute for our category columns, i.e. as a value to put on the *y* aesthetic. The reason why we did not explicitly state this aesthetic in the previous example is the fact that the statistics function automatically selects the aggregate function that is expected to be one most commonly used (in our case it was `count`). If we want to use a different aggregation variable, we can explicitly set the *y* aesthetic to one of the other variables, but we need to leverage the `ggplot2` convention where we add a prefix and suffix `..` to the names of such variables, like in this example:
+
+```{r, eval = F}
+aes (x = hp, y = ..density ..)
+```
+
+
+Let's try this in the following assignment.
+
+## Assignment 12.14 - explicitly specifying the aggregation variable
+
+```{r}
+# draw a histogram of the variable `wt` from the` mtcars` table
+# group the weights into 4 bins 
+# use the `geom_histogram` function and the `bins` parameter
+# set `ncount` as the aggregation variable
+```
+
+
+
+***
+
+Let's go one step further. Draw the same histogram (with *default* aggregation), but show how many **cylinders** are represented in each weight category. You can easily do this by adding a `fill` aesthetic to the geometry which will "fill" the columns with chosen color (as opposed to the `color` aesthetic that would paint the lines around a rectangles which represent columns in the bar chart).
+
+***
+
+## Assignment 12.15 - the fill aesthetic
+
+```{r}
+# draw a histogram of the variable `wt`
+# add the `cyl` variable on the `fill` aesthetic
+```
+
+
+***
+
+**Position** is an aspect of the grammar of graphics that allows you to "rearrange" the position of a particular aspect of a graph to achieve better representation clarity. In the previous example, we have already observed the "stratification" of columns based on a chosen categorical variable. Under the hood, the function actually used the `stack` positional aspect which stacks columns one on top of the other. An alternative to this might be to set the `position` aspect to `dodge` which would draw the subgroup columns next to each other.
+
+***
+
+## Assignment 12.16 - `dodge` positional aspect
+
+```{r}
+# draw the same histogram, but set the `position` aspect ratio to `dodge` 
+```
+
+
+***
+
+Notice that by using `dodge` our histogram does not look like our initial histogram (with colored in ratios according to the categorical variable), but has allowed us a clearer view of the relationship between the representation of particular categories within each bin.
+
+What happens if we "turn off" the positional aspect by using the `identity` value?
+
+***
+
+## Assignment 12.17 - `identity` positional aspect
+
+```{r}
+# draw the same histogram, but set the `position` aspect ratio to `identity` 
+# also set the `alpha` geometry parameter to `0.2`
+```
+
+
+
+***
+
+As we can see, the positional aspect of `identity` means "without repositioning". The result is the pure projection of the aforementioned three-dimensional graph, which can only be seen by making the columns "transparent" and is not reallzy that useful to us compared to representations which use appropriate repositioning.
+
+Let's show another positional aspect - `fill` (don't confuse this with the `fill` aesthetic!).
+
+***
+
+## Assignment 12.18 - fill positional aspect
+
+```{r}
+# draw the same histogram, but set the `position` aspect ratio to `fill` 
+# for better visibility, frame the rectangles with a black line
+# explain the result. What have we achieved with this histogram?
+```
+
+
+***
+
+Another example of positional aspect is the addition of "noise" to the observations on a scatterplot to avoid overlap. By adding the `jitter` positional aspect, we can better visually communicate that there are more observations than it may appear. Jitterings is effective for smaller datasets; for larger we will often get better results by tweaking the transparency parameter, reducing the size of dots, or sampling the set before visualization.
+
+To demonstrate the jittering aspect in action, we will create an "artificial" data frame of 100 partially overlapping observations.
+
+***
+
+## Assignment 12.19 - `jitter` positional aspect
+
+```{r}
+df <- data.frame( x = c(rep(1, 90), rep(2, 9), 3),
+                  y = c(rep(1, 70), rep(2, 25), rep(3, 5)))
+
+# create a scatterplot of the `df` data frame
+```
+
+
+***
+
+## Assignment 12.19 - `jitter` positional aspect (2)
+
+```{r}
+# display the same graph, but instead of using `geom_point` use `geom_jitter`
+# set `width` and` height` parameters to 0.3 (30% added noise)
+# additionally set the `color` geometry parameter to 'blue'
+# and `alpha` parameter (transparency) to 0.4
+```
+
+
+
+
+***
+
+### Storing a graph to a file
+
+We often need to save our graph to a file so that it can be easily embedded in another report document, scientific paper, forwarded by email, etc.
+
+By default, R uses the screen as a "graphical device". Optionally, we can "redirect" the graphics to another "device", usually a file of a certain type (`png`,` tiff`, `pdf`, etc.). The list of all options can be viewed with the command `?Devices`. The `png` and` tiff` formats are recommended for storing graphs in raster format, while it is common to use `pdf` for vector format.
+
+Saving graphs can be done by calling the function corresponding to the format in which we want to store the image (eg the `pdf` function will save the *next* image to a *pdf* file), but the `ggplot2` package offers a more convenient way - the `ggsave` function will store *the last drawn* graph into a file of the selected name, whereby the image format will be *deduced* from the file extension we choose. This method is better because we have the chance to see the graph first and then decide on storage.
+
+***
+
+## Assignment 12.21 - saving graph to file
+
+```{r}
+# save the following graph in the files `figures1.pdf` and` figures1.png`
+ggplot(mtcars, aes(x = hp, y = mpg, col = as.factor (cyl))) +
+  geom_point() +
+geom_smooth (aes(x = hp, y = mpg), method = 'loess',
+            linetype = 4, color = "gray", se = F, inherit.aes = F) +
+labs(x = "horsepower", y = "fuel consumption", col = "number of cylinders")
+```
+
+
+
+***
+
+
+
+### Aspects of scale, coordinate system and theme
+
+
+As with the aspects of geometry and statistics, when working with the scale aspect, we most often use the helper functions which look like this (`*` represents the name of aesthetics, such as `x`,` y`, `color` etc.):
+
+- `scale_*_continuous` - for mapping continuous (numeric) values
+- `scale_*_discrete` - for mapping discrete values
+
+
+Each of these functions has a number of parameters that we can use to influence the mapping process. For example, if we look at the documentation for `scale_x_continuous` we can see that we can set parameters for, among other things:
+
+- `name` - the name of the scale which also becomes the name of the axis / legend
+- `breaks` - the positions where ticks are placed
+- `labels` - the labels which will be printed below the ticks
+- `limits` - the range of values that will be on the axis
+- etc.
+
+It is important to note that `ggplot2` has a lot of additional helper functions that allow us to adjust some parts of the scale aspect, such as the already seen `labs` function for renaming the graph title and labels on the *x* and *y* axis. Another example are also `xlim` and `ylim` which only affects the axis range, etc. It is often worth to check out the documentation, and pick and choose the functions which will help our work the most by shortening the syntax for the visualization tasks we perform most often.
+
+Let's try to leverage the scaling aspect in the following assignments. We will use a new dataset - `diamonds` from the `ggplot2` itself. This dataset describes various features of diamonds along with their estimated value.
+
+***
+
+## Assignment 12.22 - getting acquainted with `diamonds` dataset
+
+
+```{r}
+# briefly explore the `diamonds` data frame
+```
+
+
+***
+
+This dataset has around 54,000 observations which might slow down the drawing of our graphs somewhat. Let's reduce it by sampling 5000 random observations.
+
+## Assignment 12.23 - sampling the `diamonds` data frame
+
+```{r}
+set.seed(1001)
+# sample 5000 random rows from `diamonds` data frame
+# and store them in a data frame called `diamondsSample`
+```
+
+
+***
+
+Let's now take a scatterplot which shows the diamonds` volume, price and color and fine-tune its aesthetics with the help of the scale aspect.
+
+## Assignment 12.24 - tweaking the scaling aspect of aesthetics
+
+```{r}
+# "fix" the axes and the legend of the graph 
+# - call the x and y axes "volume in mm3" and "price in $"
+# - call the color legend "color quality"
+# - limit x axis from 0 to 500
+# - set the y axis breaks on 1000, 5000, 10000 and 20000 
+# - instead of D-J label the color "quality" as numbers from 1 to 7
+ggplot(diamondsSample, aes (x * y * z, price, color = color)) + geom_point (alpha = 0.4)
+```
+
+
+
+***
+
+Notice that `ggplot` will report if some observations are not shown due to unavailable data (`NA` values in variables we want to depict). To prevent this warning, it is sufficient to add the argument `na.rm = T` to the geometry layer.
+
+It is very common to notice "an exponential trend" in our data - in other words, that the relationship between two variables reminds us of an exponential function. The previous graph is also a lesser example of such a scenario - it can be observed that the price of diamond initially only "slightly" increases with the diamond volume, and later it starts to rise more steeply.
+
+In such cases data analysts often make a decision to transform the data - for example, in our case we could use the natural logarithm of the price instead of its absolute value, to try and turn the exponential trend into a linear one, which we generally prefer. However, the transformation of price into logarithms carries with it a problem of interpretation - a graph is easier to interpret if it contains original data values instead of derived ones (1000 dollars versus 3 "dollar logarithms").
+
+Scales can help us in this case - instead of changing the data, we simply switch to a different scale. Specifically, instead of the `scale_*_continuous` function we opt for:
+
+- `scale_*_log10` - uses a logarithm scale (base 10)
+- `scale_*_reverse` - flips the scale from right to left (or down to up)
+- `scale_*_sqrt` - uses square roots of values
+
+***
+
+## Assignment 12.25 - logarithmic scale
+
+
+
+```{r}
+# change the y axis to a logarithmic one
+ggplot(diamondsSample, aes (x * y * z, price, color = color)) + geom_point (na.rm = T, alpha = 0.6) +
+  scale_x_continuous (name = "volume in mm3", limits = c (0, 450)) +
+  scale_y_continuous (name = "price in $", breaks = c (1000, 5000, 10000, 15000)) +
+  scale_color_discrete (name = "color quality", labels = 1: 7)
+```
+
+
+
+***
+
+
+One thing we often like to "fix" on graphs is colors - whether we want to better emphasize the information that the graph conveys, better fit the graph into the environment we would ultimately place it with, or simply want the graph to use colors that we find more aesthetically pleasing. This is why the `color` and` fill` aesthetics are very often further adjusted by scales. We have a good set of helper functions for this (we give examples for the `fill` aesthetics although similar functions also exist for `color`):
+
+- `scale_fill_brewer` - selecting one of the pre-prepared color palettes for displaying discrete values; pallete names can be viewed in the documentation
+- `scale_fill_distiller` - adjusts palettes for discrete values to continuous variables
+- `scale_fill_gradient` - select start and end colors that will then "blend"into each other; we useit  to display continuous values
+- `scale_fill_gradient2`,`scale_fill_gradientn` - same as above but with more colors
+- `scale_fill_grey` - for black and white visualizations
+
+***
+
+## Assignment 12.26 - color adjustment on graph
+
+
+```{r}
+# adjust the `fill` aesthetic of the next graph by using
+# the `scale_fill_brewer` function
+# Set the `pallet` parameter to one of the following pallets:
+# `Blues`, `BuPu`, `Greens`, `Grays`, `Oranges`, `OrRd`, `PuBu`,
+# `PuRd`, `Purples`, `YlGn`, `YlOrRd`
+# (more palletes can be found in the documentation)
+ggplot(diamondsSample, aes(x = x * y * z, fill = color)) +
+  geom_histogram(bins = 30, na.rm = T) +
+  xlim(0, 500)
+```
+
+
+
+
+
+***
+
+The **coordinate system** aspect is somewhat more rarely used than other grammar of graphic concepts we covered. The reason is that in most cases we want to use Cartesian coordinate system which is used by default. If we feel that our visualization requires something else - whether it is a polar coordinate system, a "sideways" Cartesian system aside, or - which is especially important when analyzing geographic data - a map representation of our data, we can use the following functions:
+
+- `coord_polar` - polar coordinate system
+- `coord_flip` - changes the `x` and `y` axes
+- `coord_map` - uses maps from `maps` and `mapproj` packages
+
+Unfortunately, there are currently no maps of the Republic of Croatia yet, but more ambitious readers can try to create one (and share with the local R community) by following the instructions at <a href = "https://github.com/trulia/choroplethr/wiki/Mapmaking-for-R-Programmers ">this</a> and <a href = "https://cran.r-project.org/web/packages/choroplethr/vignettes/h-creating-your-own-maps.html">this</a> links.
+
+***
+
+## Assignment 12.27 - inverted and polar coordinate systems
+
+
+```{r}
+# change the coordinate system to "inverted" and then to "polar" for the following graph
+ggplot(diamondsSample, aes(x = x * y * z, fill = color)) + geom_histogram(bins = 30, na.rm = T) +
+  xlim(40, 100)
+```
+
+
+
+***
+
+One thing to remember is that the `xlim` and` ylim` parameters work differently depending on whether we use them in terms of scale or the coordinate system; limiting the axis in aspect of the scale will "throw out" observations beyond the specified interval, which can affect the calculation of summary statistics, smoothing curves, etc. On the other hand, the limits given in aspect of the coordinate system will simply "zoom in" the graph to the selected area but will retain all observations when it comes to calculations. Both options are useful, depending on whether we want a graph that displays all the relevant data for a given visualization or a graph that represents an enlarged segment of another graph.
+
+***
+
+Finally, the **theme** aspect allows us to influence all visual aspects of the graph that are not related to the data. This means we can choose the background color and layout, font type and size, margins, alignments, and many other graph parameters. The theme aspect gives us extremely detailed control over the appearance of the graph, and since the theme itself is actually an object (of class `theme`), it can be stored in a variable and then easily recycled for all subsequent visualizations. Likewise, `ggplot2` offers a number of predefined themes for use and further customization, which we easily retrieve with a set of helper functions, some of which are:
+
+- `theme_gray` - *default* theme
+- `theme_bw` - black and white axes, projector-friendly
+- `theme_classic` - "classic" theme similar to the one produced by the default `plot` function
+- `theme_void` - "empty" theme
+
+***
+
+## Assignment 12.28 - the theme aspect
+
+
+```{r}
+# change the theme of the following graph to `theme_classic`
+ggplot(diamondsSample, aes(x = x * y * z, fill = color)) +
+  geom_histogram(bins = 30, na.rm = T) +
+  xlim (0, 500)
+```
+
+
+
+Often we want to change only some of the theme-related aspects (i.e. size or orientation of letters, appearance of ticks on axes, etc.). For these things we use the `theme` function, which contains a very rich set of parameters easily found by checking out the documentation. Some of these parameters are objects called "theme elements" (e.g. `element_line`,` element_text`) that we set by calling the associated function within the `theme` function call, for example:
+
+```{r, eval = FALSE}
+# changing the visual appearance of the graph title
+# (recommended for font family to use
+# `serif`,` sans` or `mono`)
+... + theme(title = element_text(family = 'serif', face = 'bold.italic'))
+```
+
+***
+
+## Assignment 12.29 - modifying theme elements
+
+```{r}
+# change the orientation of the letter on the x axis
+# so that they are at an angle of 45 degrees
+# search for help in the official documentation if needed
+ggplot(diamondsSample, aes(cut)) + geom_bar()
+                                                                                
+```
+
+
+***
+
+### Conditional (faceted) graphs
+
+
+Before demonstrating how to create conditional graphs, we need to perfom a brief detour and explain the term called *"statistical formula notation"*. This notation is often used in R, especially when training various statistical models, and is actually a way to concisely write a particular, formula-based relationship between variables of the dataset, and then incorporate it into the program code.
+
+The formulas will be discussed in more detail later, and for now we will restrict ourselves to a handful of very simple examples. If we want to write a simple formula of "y depending on x," then the final formula looks like this:
+
+```{r, eval = F}
+y ~ x # means "y depending on x"
+```
+
+we can also read this as "y as a function of x" or - in the case of linear models - a more concise notation of `y = ax + b`. Hence, we read the tilde sign (`~`) as "depending on".
+
+Here are some more simple formulas:
+
+```{r, eval = F}
+# z depending on x and y (`+` means "and", not arithmetic sum!)
+z ~ x + y
+
+# y depending on "all other variables"
+y ~ .
+
+# "all other variables" depending on y
+. ~ y
+
+# so-called "one-sided" formula, shorthand for "depending on y"
+~ y
+
+```
+
+The last two examples are a little harder to define mathematically, but are often used in function calls for different purposes, mostly because of their simple notation and easy interpretation.
+
+Let us now return to the conditional graphs. There are two basic ways to create conditional graphs, by using the functions:
+
+- `facet_grid` - for organizing subgraphs into a grid (matrix)
+- `facet_wrap` - for organizing subgraphs into one or more rows
+
+We commonly use the `facet_grid` function when we do subsets according to one or two categorical variables. Splitting two variables naturally does a "matrix" while splitting them one by one will make either a row or column, the choice we control by choosing a specific formula. On the other hand, we use the `facet_wrap` function when we want to create subgraphs only according to a single variable, but (due to a potentially larger number of categories) we want the subgraphs to span multimple rows (similar to how "word wrap" breaks sentences in text editors).
+
+***
+
+## Assignment 12.30 - `facet_grid` function
+
+```{r}
+# let's reduce the number of levels first to make the visualization simpler
+
+diamondsSample %>%
+  filter(color %in% c("G", "H", "I", "J"),
+         cut %in% c("Very Good",
+                    "Premium", "Ideal")) -> diamondsSample2
+
+# turn the following graph into a conditional graph
+# splitting graphs by all combinations of
+# colors (`color`) and cuts (`cut`)
+# use the `facet_grid` function and
+# an appropriate statistical formula as its parameter
+
+ggplot(diamondsSample2, aes(depth, fill = clarity)) +
+  geom_histogram(bins = 5, position = 'dodge')
+```
+
+
+
+***
+
+## Assignment 12.31 - `facet_grid` function (2)
+
+```{r, eval = F}
+# repeat the same as above, but now group only by color
+# arrange subgraphs into a column
+# use the `facet_grid` function and formula notation with a dot
+ggplot(diamondsSample2, aes(depth, fill = clarity)) +
+  geom_histogram(bins = 5, position = 'dodge')
+```
+
+
+***
+
+Note one important feature of conditional graphs - the coordinate axes (ie scales) are **aligned**. Specifically, before visualization, `ggplot` first check the scales of subgraphs in order to find the maximum range, which is then used as a common feature of all graphs. This is usually a preferred, feature, but if we do not want it, we can "free" a particular axis (or both) by setting the `scales` parameter `free` (for both axes) or `free_x` / `free_y`  (if we only want one axis aligned and the other "free").
+
+Let's now take a look at how the `facet_wrap` function works:
+
+***
+
+## Assignment 12.32 - `facet_wrap` function
+
+```{r}
+# break the following graph into subgraphs based on transparency (`clarity`)
+# use the `facet_wrap` function and a one-sided formula
+ggplot(diamondsSample2, aes(x * y * z, price)) + geom_point()
+```
+
+
+
+
+***
+
+## Graphs in Exploratory Analysis and Reporting
+
+Before we finish the chapter, we can briefly look at the difference between graphs made for exploratory data analysis and those we use in reports, to communicate our conclusions to other people, and to share our findings.
+
+**Exploratory data analysis** often aims for **efficiency and quantity**. It has already been said that exploratory analysis comes down to answering a series of questions that an analyst asks regarding data. How pretty the graph looks is often irrelevant - the main thing is that graphs have enough information to be able to answer the questions being asked and offer foundations for setting up various hypotheses. The analyst will also often try and experiment with different combinations of aesthetics, geometries and statistics. Sometimes it is convenient to go beyond what `ggplot2` package offers and use additional packages that are more suitable for what the analyst wants to achieve. For example, the `ggpairs` function of the `GGally` package allows pairing of multiple variables of a data frame and creating a matrix of single and two-variable graphs:
+
+
+```{r, message = FALSE}
+#library (GGally) #if necessary
+# We only take four columns for a clearer view
+ggpairs(data = diamondsSample[, c (1, 2, 5, 7)])
+```
+
+
+Exploratory graphs are used by the analyst to visualize the data for themselves, to look for patterns, to recognize distributions or natural groupings of data, or to spot outliers. Likewise, exploratory graphs are often used to quickly gain insight into various **aggregate statistics**. In the case of predictive data analysis, the analyst will often  create some simpler predictive models during the exploratory analysis, which they will then visualize on the graph to be able to more accurately evalute the models' performance, and based on the identified shortcomings, develop a strategy for further steps of the analysis.
+
+For **reporting**, on the other hand, the **quality of the graph** is crucial, in terms of presenting information clearly and transparently. The graph must be easy to readily interpret, with carefully chosen explanations and  selected use of the added **metadata**, most commonly in the form of additional text and annotations. To create such graphs, it is recommended to use additional `geom_text` layers for text tags in the corresponding areas of the graph where they can contribute most, as well as creative use of `geom_point`, `geom_hline`,` geom_vline`, `geom_rect` and similar geometric layers that will further clarify certain segments of the graph. It is also recommended to prepare a specific graph theme object in advance, which will then be consistently applied to all graphs.
+
+In many cases, the graphs used in reporting are a subset of chosen and "beautified" graphs obtained during exploratory analysis. However, the analyst should pay particular attention to the fact that graphs in reports are often made for an audience that is far less familiar with the dataset and the various in-depth knowledge that the analyst has obtained during exploratory analysis. Reporting graphs must therefore be end-user oriented and carefully designed for this purpose. Therefore, it is recommended that all elements of the graph - including the title, legends, etc., be oriented to the communication of information and clarification of what the graph is showing, which is in line with the conclusions drawn by the publication the graph is a part of.
+
+Sometimes, due to a lack of space or simply as a presentational choice, we want to put more different graphs inside a single image. We usually do this by storing separate graphs each in its own image file and then collating those images within the interface we use to write a publication containing those graphs. However, we can also combine graphs in advance using the `gridExtra` package. Among other things, this package offers the `grid.arrange` function with the help of which graphs are placed into a matrix with the selected number of rows and columns.
+
+```{r}
+#library (gridExtra) # if necessary
+
+# we first store graphs into separate variables
+g1 <- ggplot(diamondsSample, aes (x * y * z, price, color = color)) +
+  geom_point(alpha = 0.6)
+
+g2 <- ggplot(diamondsSample, aes (x = x * y * z, fill = color)) +
+  geom_histogram(bins = 30, na.rm = T) +
+  scale_fill_brewer (palette = "Greens")
+
+g3 <- ggplot(diamondsSample, aes (x = cut)) +
+  geom_bar(fill = "blue", alpha = 0.5)
+
+g4 <- ggplot(diamondsSample, aes (x = color, fill = clarity)) +
+  geom_bar() + coord_polar()
+
+# and then we call the `grid.arrange` function
+grid.arrange(g1, g2, g3, g4, nrow = 2, ncol = 2)
+```
+
+This concludes the story of the grammar of graphics, its aspects and its application with the help of the `ggplot2` package. Not all of the features of this package are fully explained here, which is why it is strongly recommended that you read the documentation further and expand your knowledge beyond what was covered in this chapter. Also, one should not forget about a number of additional packages that further extend the capabilities of the `ggplot2` package, which we should look for depending on our requirements and desires regarding the visualizations we want to create for our data analysis projects. For inspiration, it's convenient to look at the gallery of graphs and images created using the R language, available <a href = "http://www.r-graph-gallery.com/all-graphs/"> at this link </a>.
+
+***
