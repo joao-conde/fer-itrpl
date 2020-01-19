@@ -12,13 +12,49 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Exercises {-}
 
 1. Load the `diamonds` data frame which comes with the `ggplot2` package.
+```{r}
+library(dplyr)
+library(ggplot2)
+data(diamonds)
+glimpse(diamonds)
+head(diamonds)
+```
 
 a) Show the diamond price distribution with the aid of two graphs - a histogram and the so-called. *frequency polygons * (function `geom_freqpoly`)). Divide the prices into 10 bins.
+```{r}
+ggplot(diamonds, aes(x=price)) -> g
+g + geom_histogram(bins=10)
+g + geom_freqpoly(bins=10)
+```
 
-b) add the "clarity" of the diamond to the graphs from a) (the `clarity` column) which you will set to the `fill` aesthetics ('histogram') or `color` aesthetic (frequency polygons). Do you see any difference pertaining to the default position aspect?
+
+b) Add the "clarity" of the diamond to the graphs from a) (the `clarity` column) which you will set to the `fill` aesthetics ('histogram') or `color` aesthetic (frequency polygons). Do you see any difference pertaining to the default position aspect?
+```{r}
+ggplot(diamonds, aes(x=price, fill=clarity)) + geom_histogram(bins=10)
+ggplot(diamonds, aes(x=price, color=clarity)) + geom_freqpoly(bins=10)
+# A: Frequence plot now shows each line individually instead of combining them
+```
 
 
 2. Load the `mpg` dataset. Then find the graphs called `2a.pdf`, `2b.pdf` and `2c.pdf` in the folder of this homework assignment. Try to reconstruct them. If you do not recognize the geometry used, try to consult the RStudio ggplot2 cheat sheet.
+```{r}
+#2a
+ggplot(mpg, aes(x=displ, y=cty, color=class)) + 
+   geom_point(shape=8) + 
+   geom_smooth(inherit.aes = F, alpha=5, colour="gray", linetype="dashed", se = F, aes(x=displ, y=cty)) + 
+   labs(x = "Engine displacement / litres", y = "city miles per gallon")
+
+#2b
+ggplot(mpg, aes(x=drv, y=hwy)) +
+   geom_boxplot() +
+   labs(x = "Drive type", y = "Highway miles per gallon")
+
+#2c
+ggplot(mpg, aes(x=drv, y=hwy, fill=manufacturer)) +
+   geom_col(position = "fill") +
+   labs(x = "Drive type", y = "ratio")
+```
+
 
 
 3. Adjust the scale aspect of the following graph in the following fashion:
@@ -26,11 +62,13 @@ b) add the "clarity" of the diamond to the graphs from a) (the `clarity` column)
    b) the y axis should be called `"total"` and should have its range expanded to 100
    c) the legend should be named `"year"`
    b) the rectangles color should use the `Dark2` palette
-
-
 ```{r}
-ggplot(mpg, aes(x = as.factor(cyl), 
-                fill = as.factor(year))) + geom_bar()
+ggplot(mpg, aes(x = as.factor(cyl), fill = as.factor(year))) + 
+   geom_bar() +
+   labs(x = "the number of cylinders", y="total", fill="year") +
+   scale_fill_brewer(palette = "Dark2") +
+   ylim(0, 100)
+
 ```
 
 4. Change the theme of the next graph as follows:
@@ -39,15 +77,21 @@ ggplot(mpg, aes(x = as.factor(cyl),
 
 ```{r}
 ggplot(mpg, aes(x = as.factor(trans), y = displ)) + 
-  geom_boxplot() 
+   geom_boxplot() +
+   theme_bw() +
+   theme (axis.text.x = element_text(angle = 90))
 ```
 
 
 5. The following graph shows the highway miles per gallon consumption histogram, with the color of the rectangle reflecting the number of cylinders. Try to improve the graphs' interpretability by replacing the aesthetics of color and using  multiple graphs that are conditioned by the number of cylinders. Organize the graphs in a 2 x 2 matrix.
 
 ```{r}
-ggplot(mpg, aes(hwy, fill = as.factor(cyl))) + 
-  geom_histogram(bins = 10, position = "dodge")
+
+ggplot(mpg, aes(hwy, fill = as.factor(cyl))) + geom_histogram(bins = 10, position = "dodge")
+ 
+ggplot(mpg, aes(hwy)) + 
+   geom_histogram(bins = 10, position = "dodge") + 
+   facet_wrap(cyl ~ ., nrow=2, ncol=2)
 ```
 
 
@@ -60,5 +104,13 @@ sales <- data.frame(month = 1:12,
 ```
   
 and you visualize it with a bar graph. However, the `geom_bar` function by default  uses only one variable and automatically calculates the `count` statistics. How to solve this problem? Suggest a solution and create the appropriate bar graph.
+```{r}
+# Using geom_col() which displays the y label value instead of counting
+# Labeling X as discrete values from 1 to 12 (months)
+ggplot(sales, aes(x=month, y=total)) +
+   geom_col() +
+   scale_x_discrete("Month", limits=1:12)
+```
+
 
 ***
