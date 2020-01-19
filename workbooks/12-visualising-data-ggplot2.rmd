@@ -14,7 +14,7 @@ output:
 ```{r}
 x <- 1:50
 # pass arguments `x` and `x * x` to the `plot` function
-
+plot(x, x * x)
 ```
 
 ***
@@ -41,12 +41,13 @@ To begin with, let's introduce a simplified grammar model which uses three basic
 ## Assignment 12.2 - getting acquainted with `mtcars` dataset
 
 ```{r}
+library(dplyr)
 # load the `mtcars` dataframe into the global environment
-
+data(mtcars)
 # briefly explore the `mtcars` dataset (glimpse, head ...)
+glimpse(mtcars)
+head(mtcars)
 ```
-
-
 
 
 ***
@@ -81,6 +82,7 @@ Let's now create a *scatterplot* showing the relationship between the weights an
 
 
 ```{r}
+library(ggplot2)
 ggplot() +
 layer (data = mtcars, # 1. data
        mapping = aes(x = wt, y = mpg), # 2. mapping / aesthetics
@@ -111,7 +113,10 @@ Now let's go back to our graph - what if we wanted to add an extra variable on i
 ```{r}
 # create a `ggplot` graph of the `mtcars` dataset with mappings: x = wt, y = mpg, shape = cyl
 # use point geometry
+ggplot(mtcars, aes(x=wt, y=mpg, shape=cyl)) + geom_point()
+
 # what happens if we put `as.numeric(cyl)` instead of the categorical variant?
+# A: error, since a numeric continuous variable cannot be mapped to a shape
 ```
 
 
@@ -122,6 +127,7 @@ Now let's go back to our graph - what if we wanted to add an extra variable on i
 
 ```{r}
 # create the same graph, but instead of the `shape` aesthetic, use the `color` aesthetic
+ggplot(mtcars, aes(x=wt, y=mpg, color=cyl)) + geom_point()
 ```
 
 
@@ -132,6 +138,7 @@ Now let's go back to our graph - what if we wanted to add an extra variable on i
 
 ```{r}
 # create the same graph, but now for the `cyl` column, combine both the `shape` and `color` aesthetics
+ggplot(mtcars, aes(x=wt, y=mpg, shape=cyl, color=cyl)) + geom_point()
 ```
 
 
@@ -160,11 +167,8 @@ Let's try this in the next assignment.
 ```{r}
 # rename axes and legend of the following graph
 # and add a suitable title (something that succintly describes what the graph represents)
-ggplot(mtcars, aes (x = wt, y = mpg, color = cyl, shape = cyl)) + geom_point()
-
+ggplot(mtcars, aes (x = wt, y = mpg, color = cyl, shape = cyl)) + geom_point() + labs(x = "Car weight", y = "Miles per gallon of gas", color = "Number of cylinders", shape = "Number of cylinders", title = "Relation between car weight and fuel spent")
 ```
-
-
 
 
 ***
@@ -197,6 +201,7 @@ ggplot(mtcars, aes(wt, mpg)) + geom_point(aes(color = "blue"))
 ```{r}
 # draw a scatterpolot showing the relationship between `wt` and `mpg`
 # make the points red, and set their shape to `4` and size to `3`
+ggplot(mtcars, aes(x=wt, y=mpg)) + geom_point(color="red", shape=4, size=3)
 ```
 
 
@@ -217,6 +222,7 @@ Try adding a line geometry layer to this graph. You can use the `layer` function
 graph <- ggplot(mtcars, aes (x = wt, y = mpg))
 
 # add the point geometry followed by the line geometry to this object and print it on screen
+graph + geom_point() + geom_line()
 ```
 
 
@@ -246,10 +252,9 @@ Let us return to our graph of weight vs consumption, but this time instead of ad
 ## Assignment 12.9 - linear smoothing
 
 ```{r}
-# add the point geometry to the variable `graph`
-# then add a linear smoothing layer
-# use the `stat_smooth` function
-# with the `method` parameter set to `lm` (linear smoothing)
+# add the point geometry to the variable `graph` then add a linear smoothing layer
+# use the `stat_smooth` function with the `method` parameter set to `lm` (linear smoothing)
+graph + geom_point() + stat_smooth(method="lm")
 ```
 
 
@@ -260,6 +265,7 @@ Let us return to our graph of weight vs consumption, but this time instead of ad
 
 ```{r}
 # repeat the process but se the smoothing method to `loess`
+graph + geom_point() + stat_smooth(method="loess")
 ```
 
 
@@ -270,10 +276,11 @@ Let us return to our graph of weight vs consumption, but this time instead of ad
 
 
 ```{r}
-# create the same graph again
-# but while creating a smoothing layer
-# add the `group` aesthetic and set it to `cyl`
+# create the same graph again but while creating a smoothing layer
+# add the `group` aesthetic and set it to `cyl` 
+graph + stat_smooth(method="loess", aes(group=cyl))
 # What have we achieved by doing this?
+# A: Smoothed values for each group of cylinders
 ```
 
 
@@ -300,6 +307,7 @@ Let's now create a bar chart of the number of cylinders in cars described in the
 ```{r}
 # draw a bar chart of the `cyl` variable from the `mtcars` table
 # use either the `geom_bar` or `stat_count` function
+ggplot(mtcars, aes(x=cyl)) + geom_bar()
 ```
 
 
@@ -315,6 +323,7 @@ We can use a similar representation for our numerical variable. Unlike a bar cha
 # draw a histogram of the variable `wt` from the` mtcars` table
 # group the weights into 4 bins 
 # use the `geom_histogram` function and the `bins` parameter
+ggplot(mtcars, aes(x=wt)) + geom_histogram(bins=4)
 ```
 
 
@@ -337,6 +346,7 @@ Let's try this in the following assignment.
 # group the weights into 4 bins 
 # use the `geom_histogram` function and the `bins` parameter
 # set `ncount` as the aggregation variable
+ggplot(mtcars, aes(x=wt, y=..ncount..)) + geom_histogram(bins=4)
 ```
 
 
@@ -352,6 +362,7 @@ Let's go one step further. Draw the same histogram (with *default* aggregation),
 ```{r}
 # draw a histogram of the variable `wt`
 # add the `cyl` variable on the `fill` aesthetic
+ggplot(mtcars, aes(x=wt, fill=cyl)) + geom_histogram(bins=4)
 ```
 
 
@@ -365,6 +376,7 @@ Let's go one step further. Draw the same histogram (with *default* aggregation),
 
 ```{r}
 # draw the same histogram, but set the `position` aspect ratio to `dodge` 
+ggplot(mtcars, aes(x=wt, fill=cyl)) + geom_histogram(bins=4, position="dodge")
 ```
 
 
@@ -381,6 +393,7 @@ What happens if we "turn off" the positional aspect by using the `identity` valu
 ```{r}
 # draw the same histogram, but set the `position` aspect ratio to `identity` 
 # also set the `alpha` geometry parameter to `0.2`
+ggplot(mtcars, aes(x=wt, fill=cyl)) + geom_histogram(bins=4, position="identity", alpha=0.2)
 ```
 
 
@@ -399,6 +412,7 @@ Let's show another positional aspect - `fill` (don't confuse this with the `fill
 # draw the same histogram, but set the `position` aspect ratio to `fill` 
 # for better visibility, frame the rectangles with a black line
 # explain the result. What have we achieved with this histogram?
+ggplot(mtcars, aes(x=wt, fill=cyl)) + geom_histogram(bins=4, position="fill", color="black")
 ```
 
 
@@ -417,6 +431,7 @@ df <- data.frame( x = c(rep(1, 90), rep(2, 9), 3),
                   y = c(rep(1, 70), rep(2, 25), rep(3, 5)))
 
 # create a scatterplot of the `df` data frame
+ggplot(df, aes(x=x, y=y)) + geom_point()
 ```
 
 
@@ -429,6 +444,7 @@ df <- data.frame( x = c(rep(1, 90), rep(2, 9), 3),
 # set `width` and` height` parameters to 0.3 (30% added noise)
 # additionally set the `color` geometry parameter to 'blue'
 # and `alpha` parameter (transparency) to 0.4
+ggplot(df, aes(x=x, y=y)) + geom_jitter(width=0.3, height=0.3, color="blue", alpha=0.4)
 ```
 
 
@@ -449,12 +465,15 @@ Saving graphs can be done by calling the function corresponding to the format in
 ## Assignment 12.21 - saving graph to file
 
 ```{r}
-# save the following graph in the files `figures1.pdf` and` figures1.png`
+# save the following graph in the files `figure1.pdf` and` figure1.png`
 ggplot(mtcars, aes(x = hp, y = mpg, col = as.factor (cyl))) +
   geom_point() +
 geom_smooth (aes(x = hp, y = mpg), method = 'loess',
             linetype = 4, color = "gray", se = F, inherit.aes = F) +
 labs(x = "horsepower", y = "fuel consumption", col = "number of cylinders")
+
+ggsave("figure1.pdf")
+ggsave("figure1.png")
 ```
 
 
@@ -491,6 +510,8 @@ Let's try to leverage the scaling aspect in the following assignments. We will u
 
 ```{r}
 # briefly explore the `diamonds` data frame
+glimpse(diamonds)
+head(diamonds)
 ```
 
 
@@ -504,6 +525,7 @@ This dataset has around 54,000 observations which might slow down the drawing of
 set.seed(1001)
 # sample 5000 random rows from `diamonds` data frame
 # and store them in a data frame called `diamondsSample`
+diamondsSample <- sample_n(diamonds, 5000)
 ```
 
 
@@ -520,7 +542,12 @@ Let's now take a scatterplot which shows the diamonds` volume, price and color a
 # - limit x axis from 0 to 500
 # - set the y axis breaks on 1000, 5000, 10000 and 20000 
 # - instead of D-J label the color "quality" as numbers from 1 to 7
-ggplot(diamondsSample, aes (x * y * z, price, color = color)) + geom_point (alpha = 0.4)
+ggplot(diamondsSample, aes (x * y * z, price, color = color)) + 
+  geom_point (alpha = 0.4, na.rm = T) +
+  scale_x_continuous(name = "volume in mm3", limits = c(0, 500)) +
+  scale_y_continuous(name = "price in $", breaks = c(1000, 5000, 10000, 20000)) +
+  scale_color_discrete(name = "quality", labels = 1:7)
+  
 ```
 
 
@@ -549,7 +576,7 @@ Scales can help us in this case - instead of changing the data, we simply switch
 # change the y axis to a logarithmic one
 ggplot(diamondsSample, aes (x * y * z, price, color = color)) + geom_point (na.rm = T, alpha = 0.6) +
   scale_x_continuous (name = "volume in mm3", limits = c (0, 450)) +
-  scale_y_continuous (name = "price in $", breaks = c (1000, 5000, 10000, 15000)) +
+  scale_y_log10 (name = "price in $", breaks = c (1000, 5000, 10000, 15000)) +
   scale_color_discrete (name = "color quality", labels = 1: 7)
 ```
 
@@ -572,15 +599,21 @@ One thing we often like to "fix" on graphs is colors - whether we want to better
 
 
 ```{r}
-# adjust the `fill` aesthetic of the next graph by using
-# the `scale_fill_brewer` function
-# Set the `pallet` parameter to one of the following pallets:
-# `Blues`, `BuPu`, `Greens`, `Grays`, `Oranges`, `OrRd`, `PuBu`,
-# `PuRd`, `Purples`, `YlGn`, `YlOrRd`
-# (more palletes can be found in the documentation)
-ggplot(diamondsSample, aes(x = x * y * z, fill = color)) +
+# adjust the `fill` aesthetic of the next graph by using the `scale_fill_brewer` function
+# Set the `palette` parameter to one of the following pallets:
+  # `Blues`, `BuPu`, `Greens`, `Grays`, `Oranges`, `OrRd`, `PuBu`,
+  # `PuRd`, `Purples`, `YlGn`, `YlOrRd`
+  # (more palletes can be found in the documentation)
+g <- ggplot(diamondsSample, aes(x = x * y * z, fill = color)) +
   geom_histogram(bins = 30, na.rm = T) +
   xlim(0, 500)
+g
+
+#Blues palette
+g + scale_fill_brewer(palette="Blues")
+
+#YlOrRd palette
+g + scale_fill_brewer(palette="YlOrRd")
 ```
 
 
@@ -604,8 +637,14 @@ Unfortunately, there are currently no maps of the Republic of Croatia yet, but m
 
 ```{r}
 # change the coordinate system to "inverted" and then to "polar" for the following graph
-ggplot(diamondsSample, aes(x = x * y * z, fill = color)) + geom_histogram(bins = 30, na.rm = T) +
+g <- ggplot(diamondsSample, aes(x = x * y * z, fill = color)) + geom_histogram(bins = 30, na.rm = T) +
   xlim(40, 100)
+g
+
+g + coord_flip()
+
+g + coord_polar()
+
 ```
 
 
@@ -632,7 +671,8 @@ Finally, the **theme** aspect allows us to influence all visual aspects of the g
 # change the theme of the following graph to `theme_classic`
 ggplot(diamondsSample, aes(x = x * y * z, fill = color)) +
   geom_histogram(bins = 30, na.rm = T) +
-  xlim (0, 500)
+  xlim (0, 500) +
+  theme_classic()
 ```
 
 
@@ -654,7 +694,8 @@ Often we want to change only some of the theme-related aspects (i.e. size or ori
 # change the orientation of the letter on the x axis
 # so that they are at an angle of 45 degrees
 # search for help in the official documentation if needed
-ggplot(diamondsSample, aes(cut)) + geom_bar()
+ggplot(diamondsSample, aes(cut)) + geom_bar() + 
+  theme(axis.text.x = element_text(angle = 45))
                                                                                 
 ```
 
@@ -713,13 +754,15 @@ diamondsSample %>%
                     "Premium", "Ideal")) -> diamondsSample2
 
 # turn the following graph into a conditional graph
-# splitting graphs by all combinations of
-# colors (`color`) and cuts (`cut`)
-# use the `facet_grid` function and
-# an appropriate statistical formula as its parameter
+# splitting graphs by all combinations of colors (`color`) and cuts (`cut`)
+# use the `facet_grid` function and an appropriate statistical formula as its parameter
 
 ggplot(diamondsSample2, aes(depth, fill = clarity)) +
-  geom_histogram(bins = 5, position = 'dodge')
+  geom_histogram(bins = 5, position = 'dodge') -> g
+
+g
+
+g + facet_grid(color ~ cut)
 ```
 
 
@@ -733,7 +776,11 @@ ggplot(diamondsSample2, aes(depth, fill = clarity)) +
 # arrange subgraphs into a column
 # use the `facet_grid` function and formula notation with a dot
 ggplot(diamondsSample2, aes(depth, fill = clarity)) +
-  geom_histogram(bins = 5, position = 'dodge')
+  geom_histogram(bins = 5, position = 'dodge') -> g
+
+g
+
+g + facet_grid(color ~ .)
 ```
 
 
@@ -750,7 +797,10 @@ Let's now take a look at how the `facet_wrap` function works:
 ```{r}
 # break the following graph into subgraphs based on transparency (`clarity`)
 # use the `facet_wrap` function and a one-sided formula
-ggplot(diamondsSample2, aes(x * y * z, price)) + geom_point()
+ggplot(diamondsSample2, aes(x * y * z, price)) + geom_point() -> g
+g
+
+g + facet_wrap(~clarity)
 ```
 
 
@@ -766,7 +816,7 @@ Before we finish the chapter, we can briefly look at the difference between grap
 
 
 ```{r, message = FALSE}
-#library (GGally) #if necessary
+library (GGally)
 # We only take four columns for a clearer view
 ggpairs(data = diamondsSample[, c (1, 2, 5, 7)])
 ```
@@ -781,7 +831,7 @@ In many cases, the graphs used in reporting are a subset of chosen and "beautifi
 Sometimes, due to a lack of space or simply as a presentational choice, we want to put more different graphs inside a single image. We usually do this by storing separate graphs each in its own image file and then collating those images within the interface we use to write a publication containing those graphs. However, we can also combine graphs in advance using the `gridExtra` package. Among other things, this package offers the `grid.arrange` function with the help of which graphs are placed into a matrix with the selected number of rows and columns.
 
 ```{r}
-#library (gridExtra) # if necessary
+library (gridExtra)
 
 # we first store graphs into separate variables
 g1 <- ggplot(diamondsSample, aes (x * y * z, price, color = color)) +
