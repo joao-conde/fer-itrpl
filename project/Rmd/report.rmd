@@ -1,0 +1,44 @@
+---
+title: "Exploratory analysis of 'Board Games' data set"
+author: "João Conde"
+date: "31st January 2020"
+output: html_document
+---
+
+## Load libraries and data set
+```{r}
+library(tidyverse)
+boardgames_tbl <- read_csv('../data/boardgames.csv')
+```
+
+## Explore data set
+```{r}
+head(boardgames_tbl)
+glimpse(boardgames_tbl)
+
+# filter out all those boardgames that has less than 5 user ratings and all the expansions
+# unique(boardgames_tbl$type) -> "boardgame" and "boardgameexpansion"
+# boardgames_tbl %>% filter(users_rated < 0) -> some games dont have ratings or too few people voting
+
+# Most popular board games based on total owners
+# Board game publication rate over time
+# Board game ratings by publication year
+# Complexity over year
+# Most popular mechanics
+# Average number of mechanics per game per year
+# Most popular themes
+# Average number of themes per game per year
+# Rating vs Complexity
+
+
+# Games with few votes tend to have extreme ratings
+# The Bayesian average removes outliers
+# On average recently published games have higher ratings.
+# The Bayesian average moderates the recency effect.
+
+# Average ratings for games in the population. -> normal distro
+# Average rating per year 
+
+# Average rating vs number of ratings and Avg rating vs number of owners
+```
+
