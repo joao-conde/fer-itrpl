@@ -12,3 +12,8 @@
 - Possible data set filtering conditions, such as game type (ignoring expansions) and games with too few ratings (less than X users voting)
 - Search Kaggle and online blog posts to understand meaning of some columns
 - Definition of interesting plots based on given features
+- Understanding column values and possible filter necessities
+
+### 25th January
+- Discover correlations between variables
+- Apply bayes averaging effect in outlier removal

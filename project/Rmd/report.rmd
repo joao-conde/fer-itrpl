@@ -6,16 +6,83 @@ output: html_document
 ---
 
 ## Load libraries and data set
+
 ```{r}
 library(tidyverse)
 boardgames_tbl <- read_csv('../data/boardgames.csv')
 ```
 
 ## Explore data set
+
 ```{r}
 head(boardgames_tbl)
 glimpse(boardgames_tbl)
+```
 
+## Understanding column values' ranges and missing values
+
+```{r}
+# available game 'types': "boardgameexpansion" and "boardgame"
+paste("Game types")
+unique(boardgames_tbl$type)
+paste("-----------------------")
+
+# some 'yearpublished' values are negative or zero
+paste("Negative or null publication years")
+nrow(filter(boardgames_tbl, yearpublished <= 0))
+paste("-----------------------")
+
+# some games have very few reviews
+paste("Few reviewed games")
+nrow(filter(boardgames_tbl, users_rated <= 10))
+paste("-----------------------")
+
+# many columns have 'NA' values across rows
+paste("Columns with missing values")
+colnames(boardgames_tbl)[colSums(is.na(boardgames_tbl)) > 0]
+```
+
+## Filtering dataset  
+
+```{r}
+boardgames_clean_tbl <-
+  boardgames_tbl %>%
+  filter(type == "boardgame") %>%   # ignoring expansions
+  filter(yearpublished >= 1800 & yearpublished <= 2020) %>% # filter negative year values and to low ones
+  filter(users_rated >= 10) # eliminate game with too few reviews as the rating can be biased (1 5-star vote)
+```
+
+## Average ratings and outliers (few extreme votes)
+
+In the graph below we observe that board games with few votes tend to have overall better ratings.
+A massive amount of points representing ratings are concentrated in the region of few voted games.
+
+```{r}
+g1 <- ggplot(boardgames_clean_tbl, aes(users_rated, average_rating)) + 
+  geom_point(alpha = 0.3) +
+  xlim(0, 20000) +
+  xlab("Number of user votes") + 
+  ylab("Average rating") + 
+  ggtitle('Games with few votes tend to have extreme ratings')
+
+g1
+```
+
+Even though we filtered games with 10 or less votes, there is a *"smoother"* way of dealing with outliers. That is done using the Bayesian average. In Bayesian statistics we start out with a prior that represents our a *"priori"* assumptions. When evidence comes in we can update this prior, computing a so called posterior that reflects our updated belief. Thus if we have an unrated game we assume its average. If not, the ratings will have to convince us otherwise. As seen below, this removes outliers fairly well.
+
+```{r}
+#gather(metric, rating, average_rating, bayes_average_rating)
+ggplot(boardgames_clean_tbl, aes(users_rated, bayes_average_rating)) +
+  geom_point(alpha = 0.3) +
+  xlim(0, 20000) +
+  xlab("Number of user votes") + 
+  ylab("Bayes Average rating") +
+  ggtitle('Removal of outliers by Bayesian average')
+```
+
+
+## TODO
+```{r}
 # filter out all those boardgames that has less than 5 user ratings and all the expansions
 # unique(boardgames_tbl$type) -> "boardgame" and "boardgameexpansion"
 # boardgames_tbl %>% filter(users_rated < 0) -> some games dont have ratings or too few people voting
