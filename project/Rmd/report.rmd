@@ -48,8 +48,8 @@ colnames(boardgames_tbl)[colSums(is.na(boardgames_tbl)) > 0]
 boardgames_clean_tbl <-
   boardgames_tbl %>%
   filter(type == "boardgame") %>%   # ignoring expansions
-  filter(yearpublished >= 1800 & yearpublished <= 2020) %>% # filter negative year values and to low ones
-  filter(users_rated >= 10) # eliminate game with too few reviews as the rating can be biased (1 5-star vote)
+  filter(yearpublished >= 1960 & yearpublished <= 2020) %>% # filter negative year values and too low ones
+  filter(users_rated >= 10) # eliminate games with too few reviews as the rating can be biased (e.g. one 5-star vote)
 ```
 
 ## Average ratings and outliers (few extreme votes)
@@ -58,36 +58,102 @@ In the graph below we observe that board games with few votes tend to have overa
 A massive amount of points representing ratings are concentrated in the region of few voted games.
 
 ```{r}
-g1 <- ggplot(boardgames_clean_tbl, aes(users_rated, average_rating)) + 
+ggplot(boardgames_clean_tbl, aes(users_rated, average_rating)) + 
   geom_point(alpha = 0.3) +
   xlim(0, 20000) +
-  xlab("Number of user votes") + 
-  ylab("Average rating") + 
-  ggtitle('Games with few votes tend to have extreme ratings')
-
-g1
+  labs(x = "Number of user votes", y = "Average rating") + 
+  ggtitle("Games with few votes tend to have extreme ratings")
 ```
 
 Even though we filtered games with 10 or less votes, there is a *"smoother"* way of dealing with outliers. That is done using the Bayesian average. In Bayesian statistics we start out with a prior that represents our a *"priori"* assumptions. When evidence comes in we can update this prior, computing a so called posterior that reflects our updated belief. Thus if we have an unrated game we assume its average. If not, the ratings will have to convince us otherwise. As seen below, this removes outliers fairly well.
 
 ```{r}
-#gather(metric, rating, average_rating, bayes_average_rating)
-ggplot(boardgames_clean_tbl, aes(users_rated, bayes_average_rating)) +
+gather(boardgames_clean_tbl, n_ratings, rating, average_rating, bayes_average_rating) %>%
+  ggplot(aes(users_rated, rating)) +
   geom_point(alpha = 0.3) +
+  facet_grid(. ~ n_ratings) +
   xlim(0, 20000) +
-  xlab("Number of user votes") + 
-  ylab("Bayes Average rating") +
-  ggtitle('Removal of outliers by Bayesian average')
+  labs(x = "Number of user votes", y = "Rating") +
+  ggtitle("Removal of outliers by Bayesian average")
+```
+
+In the graph above we see that higher rated games are better distributed across different number of votes when using the bayesian average rather than the average rating.
+
+## Recent games bias
+
+Newer games tend to have higher ratings, due to their populatiry as seen in the graph below.
+
+```{r}
+boardgames_clean_tbl %>%
+  group_by(yearpublished) %>%
+  summarise(average = mean(average_rating)) %>%
+  ggplot(aes(yearpublished, average)) +
+  geom_point() +
+  geom_smooth() +
+  labs(x = "Publishing year", y = "Average rating") +
+  ggtitle("Recent games have higher ratings")
+```
+
+The great news is that using Bayesian average will also prove beneficial here since it also *smooths* the recency effect, as seen below.
+
+```{r}
+boardgames_clean_tbl %>%
+  group_by(yearpublished) %>%
+  summarise(average = mean(average_rating),
+            bayes_average = mean(bayes_average_rating)) %>%
+  gather(type, average, average, bayes_average) %>%
+  ggplot(aes(yearpublished, average, bayes_average, color = type)) +
+  xlim(1960, 2015) +
+  geom_point(alpha = 0.3) +
+  geom_smooth() +
+  ggtitle('Moderation of recency effect with bayesian average')
+```
+
+## Top25 popular board games (based on total number of owners)
+
+The graph below lists the top 25 games according to their popularity, based in total number of owners.
+
+```{r}
+boardgames_clean_tbl %>%
+  top_n(25, total_owners) %>%
+  ggplot(aes(reorder(name, total_owners), total_owners)) +
+  geom_col(fill = "blue") +
+  coord_flip() +
+  labs(x = "Total Owners", y = "Game title") +
+  ggtitle("Top25 popular games (based on total number of owners)")
+```
+
+## Rating distribution
+
+The graph below shows us that games' rating follow a gaussian distribution. The vertical black line represents the average of averages.
+
+```{r}
+ggplot(boardgames_clean_tbl, aes(x = average_rating)) +
+  geom_vline(xintercept = mean(boardgames_clean_tbl$average_rating), color = "black") +
+  geom_histogram(aes(y = ..density..), binwidth = 0.1, fill = "red", alpha = 0.2, col = "deeppink") +
+  geom_density(color="black") +
+  xlab('Games Average Rating')
+```
+
+## Ratings distribution per year since the beginning of the 21st century.
+
+The graph below shows the distribution of game ratings per year since the beginning of the 21st century. Horizontal black line shows the average of those ratings.
+
+```{r}
+boardgames_clean_tbl %>%
+  filter(yearpublished >= 2000) %>%
+  mutate(year_discrete=as.factor(yearpublished)) %>%
+  ggplot(aes(year_discrete, average_rating, fill=year_discrete)) +
+  geom_boxplot() +
+  geom_hline(yintercept=mean(boardgames_clean_tbl$average_rating), color="black")+
+  labs(x = "Year", y = "Average Rating") +
+  theme (axis.text.x = element_text(angle = 45))
 ```
 
 
 ## TODO
 ```{r}
-# filter out all those boardgames that has less than 5 user ratings and all the expansions
-# unique(boardgames_tbl$type) -> "boardgame" and "boardgameexpansion"
-# boardgames_tbl %>% filter(users_rated < 0) -> some games dont have ratings or too few people voting
 
-# Most popular board games based on total owners
 # Board game publication rate over time
 # Board game ratings by publication year
 # Complexity over year
@@ -96,15 +162,6 @@ ggplot(boardgames_clean_tbl, aes(users_rated, bayes_average_rating)) +
 # Most popular themes
 # Average number of themes per game per year
 # Rating vs Complexity
-
-
-# Games with few votes tend to have extreme ratings
-# The Bayesian average removes outliers
-# On average recently published games have higher ratings.
-# The Bayesian average moderates the recency effect.
-
-# Average ratings for games in the population. -> normal distro
-# Average rating per year 
 
 # Average rating vs number of ratings and Avg rating vs number of owners
 ```
