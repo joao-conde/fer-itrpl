@@ -4,7 +4,6 @@
 - Set up working environment and git repository
 - Explore data set
 - Search for other data visualization projects
-- Understand bayes average effect on the "removal" of outliers
 
 ### 20th January
 - Possible data set filtering conditions, such as game type (ignoring expansions) and games with too few ratings (less than X users voting)
@@ -14,14 +13,27 @@
 
 ### 23rd January
 - Discover correlations between variables
-- Apply bayes averaging effect in outlier removal
-- Apply bayes averaging effect in recency smoothening
+- Top25 popular games
+- Fixed or variable number of players
+- Fixed and varying duration games
 
 ### 25th January
-- Top25 popular games
 - Rating distribution
 - Rating distribution per year since the beginning of the 21st century
 - Correlation between average rating and game popularity (number of ratings and total owners)
 - Game releases over time
+- Game ratings over time since the beginning of the 21st century
 
-### 30th January
+### 27th January
+- Complexity of games since the beginning of the 21st century
+- Complexity and rating
+- Game comments and rating
+- Maximum players average per game throughout the years
+
+
+### 31th January
+- Understand bayes average effect on the "removal" of outliers
+- Apply bayes averaging effect in outlier removal
+- Apply bayes averaging effect in recency smoothening
+- Beautify PDF report, hiding code chunks, ...
+- Submit project
