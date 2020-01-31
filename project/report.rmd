@@ -4,7 +4,6 @@ author: "João Conde"
 date: "31st January 2020"
 output:
   pdf_document: default
-  html_document: default
 ---
 
 ## Load libraries and data set

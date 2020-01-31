@@ -1,0 +1,246 @@
+---
+title: "13 Selected Machine Learning Methods: Regression Analysis"
+author: "João Conde"
+date: "31 January 2020"
+output:
+  html_document: default
+---
+
+***
+
+## Load libraries
+```{r, message = F}
+library(car)
+library(MASS)
+library(broom)
+library(GGally)
+library(ggplot2)
+library(corrplot)
+library(gridExtra)
+library(tidyverse)
+```
+
+
+## Assignment 13.1 - suspecting potential linear relationships
+
+```{r}
+# load data from the `data1.csv` file into a variable called `df`
+df <- read.csv("data/data1.csv", stringsAsFactors = F, encoding = "UTF-8")
+
+# draw four scatterplots of relationships between cariax with every single variable y in the data box above
+# add to each graph a smoothing geometry, the `lm` method
+g1 <- ggplot(df, aes(x, y1)) + geom_point() + geom_smooth(method = 'lm')
+g2 <- ggplot(df, aes(x, y2)) + geom_point() + geom_smooth(method = 'lm')
+g3 <- ggplot(df, aes(x, y3)) + geom_point() + geom_smooth(method = 'lm')
+g4 <- ggplot(df, aes(x, y4)) + geom_point() + geom_smooth(method = 'lm')
+grid.arrange(g1, g2, g3, g4)
+
+# Answer the questions:
+# Q1: In which graphs do you see a possible linear relationship between the variables?
+# A1: g1 and g2 
+
+# Q2: Which graph shows nonlinear connection?
+# A2: g3 and g4
+
+# Q3: For which graph could you say the variables are independent?
+# A3: g4
+```
+
+## Assignment 13.2 - calculating the correlation coefficient
+
+```{r}
+# calculate and print the Pearson's correlation coefficient between all pairs visualized in the previous exercise
+cor(df$x, df$y1)
+cor(df$x, df$y2)
+cor(df$x, df$y3)
+cor(df$x, df$y4)
+```
+
+## Assignment 13.3 - creating a simple linear model
+
+```{r}
+# Use the `lm` function to create a linear data model for the `df` dataset
+# where `x` is the input and `y1` is the output variable
+# Save the result to the `linMod` variable and print it
+linMod <- lm(y1 ~ x, data = df)
+linMod
+```
+
+## Assignment 13.4 - linear model summary
+
+```{r}
+# execute the `summary` function on the trained linear model
+summary(linMod)
+```
+
+## Assignment 13.5 - creating new predictions
+
+```{r}
+# the following vector has the "new" values of the input variable `x`
+new_x <- c(-5, 10, 50, 102)
+
+# apply our predictive model on these new variables by using
+# the `predict` function and`and linear model `linMod` linear model 
+# be sure to wrap new data in the form of a data frame first
+predict(linMod, data.frame(x = new_x))
+
+# calculate predictions "manually" by reading the obtained
+# coefficients from the linear model
+coef(linMod)[1] + new_x * coef(linMod)[2]
+```
+
+## Assignment 13.6 - the augment function
+
+```{r}
+# apply the `augment` function on the `linMod` model
+# store the resulting data frame in the `predictions` variable
+predictions <- augment(linMod)
+
+# look at the first few lines from this variable
+head(predictions)
+```
+
+## Assignment 13.7 - checking the ‘normality’ of residuals
+
+```{r}
+# using the `predictions` data frame
+# create a scatterplot between fitted values and std. residuals
+# also draw a horizontal line that goes through zero
+g1 <- ggplot(predictions, aes(.fitted, .std.resid)) + geom_point() +
+  geom_hline(yintercept = 0, color = "blue")
+
+# create a density graph of the std. residuals
+# use the `geom_density` geometry function
+g2 <- ggplot(predictions, aes(x = .std.resid)) + geom_density()
+
+# create a quantile quantile graph of std. residuals
+# use the `geom_qq` geometry function
+# set residuals to the `sample` aesthetic (not `x`!)
+g3 <- ggplot(predictions, aes(sample = .std.resid)) + geom_qq()
+
+grid.arrange(g1, g2, g3, ncol = 2)
+```
+
+## Assignment 13.8 - sample data frame with a categorical predictor
+
+```{r}
+# load data from the `data2.csv` file in the `df2` data frame
+# examine the loaded data frame
+df2 <- read_csv("data/data2.csv")
+df2$x <- factor(df2$x)
+glimpse(df2)
+
+# draw a scatterplot of a relationship between `x` and `y`
+ggplot(df2, aes(x, y)) + geom_point()
+```
+
+## Assignment 13.9 - creating a simple linear model with a categorical input
+
+```{r}
+# Use the `lm` function to create a linear data model from the `df2` data frame
+# where `x` is input and `y` is output variable
+# save the result to the `linMod2` variable
+linMod2 <- lm(y ~ x, data = df2)
+
+# print out the summary of `linMod2`
+summary(linMod2)
+```
+
+## Assignment 13.10 - creating a linear model with multiple predictors
+
+```{r}
+# Use the `lm` function to create a linear data model from the `mtcars` table
+# use the variables `am`,` cyl` and `wt` as input
+# and the variable `mpg` as output
+# name the model `linMod`
+linMod <- lm(mpg ~ am + cyl + wt, data = mtcars)
+
+# check the model summary
+summary(linMod)
+```
+
+## Assignment 13.11 - collinearity of input variables
+
+```{r}
+# put all (truly) numeric columns from the `mtcars` dataset
+# into a `mtCarsNumPred` data frame
+# (do not include the `mpg` variable since we will treat it as our goal)
+mtcars %>% select(-mpg) %>% select_if(is.numeric) -> mtCarsNumPred
+
+# print the correlation matrix using the `cor` function
+# and the `mtCarsNumPred` as input parameter
+mtCarsNumPred %>% cor
+
+# pass this data frame to the `ggpairs` function of the `GGally` package
+ggpairs(mtCarsNumPred)
+```
+
+
+## Assignment 13.12 - function corrplot
+
+```{r}
+# load the `corrplot` package (install if necessary)
+# invoke the `corrplot` function to which you will pass the correlation matrix
+# made from the `mtCarsNumPred` data frame
+corrplot(cor(mtCarsNumPred))
+```
+
+
+## Assignment 13.13 - multicollinearity and VIF measure
+
+```{r}
+# train the linear model `lm_all` which uses the `mtcars` data frame
+# and has `mpg` as target and all other variables as predictors
+#pass the above model to the `vif` function of the` cars` package and print the result
+lm_all <- lm(mpg ~., data = mtcars)
+vif(lm_all)
+```
+
+## Assignment 13.14 - linear model with collinear inputs
+
+```{r}
+# train the following linear models:
+# `lm1` -` mpg` depending on `disp`
+# `lm2` -` mpg` depending on `wt`
+# `lm3` -` mpg` depending on `disp` and` wt`
+lm1 <- lm(mpg ~ disp, data = mtcars)
+lm2 <- lm(mpg ~ wt, data = mtcars)
+lm3 <- lm(mpg ~ disp + wt, data = mtcars)
+
+# study the summaries of the linear models obtained,
+# especially the t-values of the parameters and the R-squared measure
+summary(lm1)
+summary(lm2)
+summary(lm3)
+```
+
+
+## Assignment 13.15 - stepwise variable selection for linear regression
+
+```{r}
+# We create a "complete" and "empty" model
+lm_all <- lm(mpg ~., data = mtcars)
+lm_blank <- lm(mpg ~ 1, data = mtcars)
+
+# check out summaries on these models
+# to get the feeling of "baseline" performance
+summary(lm_all)
+summary(lm_blank)
+
+# use the `stepAIC` function to create the `lm1` and `lm2` models
+# `lm1` - created by backward selection from full model
+# (parameter direction = "backward")
+lm1 <- stepAIC(lm_all, direction = "backward", trace = 0)
+
+# `lm2` - is created by selecting" advance "from the empty model
+# (parameters direction = "forward",
+#              scope = list (upper = lm_all, lower = lm_ blank))
+lm2 <- stepAIC (lm_blank, scope = list (upper = lm_all, lower = lm_blank),
+                direction = "forward", trace = 0)
+
+# check out summaries of these models
+summary(lm1)
+summary(lm2)
+```
+
+***
