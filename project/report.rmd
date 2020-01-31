@@ -1,0 +1,377 @@
+---
+title: "Exploratory analysis of the 'Board Games' data set"
+author: "João Conde"
+date: "31st January 2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+## Load libraries and data set
+
+```{r, message = F}
+library(scales)
+library(gridExtra)
+library(tidyverse)
+boardgames_tbl <- read_csv('boardgames.csv')
+```
+
+## Explore data set
+
+```{r}
+head(boardgames_tbl)
+glimpse(boardgames_tbl)
+```
+
+## Searching for missing column values and ranges
+
+**Game types**
+```{r, echo = F}
+unique(boardgames_tbl$type)
+```
+
+**Negative valued publishing years**
+```{r, echo = F}
+nrow(filter(boardgames_tbl, yearpublished < 0))
+```
+
+**Games with less than 10 reviews**
+```{r, echo = F}
+nrow(filter(boardgames_tbl, users_rated <= 10))
+```
+
+**Columns with missing values (NA)**
+```{r, echo = F}
+colnames(boardgames_tbl)[colSums(is.na(boardgames_tbl)) > 0]
+```
+
+## Filtering dataset  
+
+```{r}
+boardgames_clean_tbl <-
+  boardgames_tbl %>%
+  
+  # ignoring expansions
+  filter(type == "boardgame") %>%   
+  
+  # filter negative years while selecting a resonable interval
+  filter(yearpublished >= 1960 & yearpublished <= 2019) %>% 
+  
+  # eliminate games with too few reviews as the rating can be biased (e.g. one 5-star vote)
+  filter(users_rated >= 10) 
+```
+
+## Top25 popular board games (based on total number of owners)
+
+The graph below lists the top 25 games according to their popularity, based on total number of owners.
+
+```{r, echo = F}
+boardgames_clean_tbl %>%
+  top_n(25, total_owners) %>%
+  ggplot(aes(reorder(name, total_owners), total_owners)) +
+  geom_col(fill = "blue") +
+  coord_flip() +
+  labs(x = "Total Owners", y = "Game title") +
+  ggtitle("Top25 popular games (based on total number of owners)")
+```
+
+
+## Maximum players average per game throughout the years
+
+In order to evaluate if over the years games had become more multiplayer oriented, we plotted the graph below, with an average of the maximum number of players from all the games released per year and an horizontal black line as the all time average.
+
+```{r, echo = F}
+boardgames_clean_tbl %>%
+  group_by(yearpublished) %>%
+  summarise(n = n(), total_max_players = sum(maxplayers)) %>%
+  ggplot(aes(yearpublished, total_max_players/n)) +
+  geom_hline(yintercept=mean(boardgames_clean_tbl$maxplayers)) +
+  geom_col(fill="orange") +
+  labs(x="Year", y="Average maximum players") +
+  ggtitle("Average maximum players per year")
+```
+
+However, it seems board games are as multiplayer oriented as before, having very similar number of maximum players per year (excluding the outlier of 1963 which is far above the average for maximum player limit).
+
+
+## Fixed and variable number of players
+
+A simple pie chart to illustrate the percentages of games that have an exact number of players and games that allow for a variable number of players (within a range).
+
+```{r, echo = F}
+boardgames_clean_tbl %>%
+  mutate(fixed_player_size = (minplayers == maxplayers)) %>%
+  summarise(nfixed = sum(fixed_player_size), nvariable = sum(!fixed_player_size)) -> slices
+
+perc <- round((unlist(slices) / (unlist(slices)[1] + unlist(slices)[2])), 3) * 100
+lbls <- c("Fixed player size", "Varying player size")
+lbls <- paste(lbls, " (", perc, "%)", sep="")
+pie(unlist(slices), col = c("red", "blue"), labels=lbls, main="Fixed and varying player sized games")
+```
+
+
+## Fixed and varying duration games
+
+Similarly to the last one, this pie chart illustrates the percentage of games with fixed and varying durations.
+
+```{r, echo = F}
+boardgames_clean_tbl %>%
+  mutate(fixed_player_size = (minplaytime == maxplaytime)) %>%
+  summarise(nfixed = sum(fixed_player_size), nvariable = sum(!fixed_player_size)) -> slices
+
+perc <- round((unlist(slices) / (unlist(slices)[1] + unlist(slices)[2])), 3) * 100
+lbls <- c("Fixed game duration", "Varying game duration")
+lbls <- paste(lbls, " (", perc, "%)", sep="")
+pie(unlist(slices), col = c("brown", "orange"), labels=lbls, main="Fixed and varying duration games")
+```
+
+## Games for adults (18+ years old)
+
+The number of board games that requires players to be over 18 is, as expected, extremely low. 
+
+```{r, echo = F}
+boardgames_clean_tbl %>%
+  mutate(over_18 = (minage >= 18)) %>%
+  summarise(n_over_18 = sum(over_18), n_under_18 = sum(!over_18)) -> slices
+
+perc <- round((unlist(slices) / (unlist(slices)[1] + unlist(slices)[2])), 3) * 100
+lbls <- c("18+ games", "Under aged games")
+lbls <- paste(lbls, " (", perc, "%)", sep="")
+pie(unlist(slices), col = c("yellow", "green"), labels=lbls, main="Underage and 18+ games")
+```
+
+However, could the minimum age imposed by each board game attract different player bases hence having different ratings?
+
+```{r}
+boardgames_clean_tbl %>%
+  filter(minage > 0) %>%
+  mutate(minage_discrete=as.factor(minage)) %>%
+  ggplot(aes(minage_discrete, average_rating, fill=minage_discrete)) +
+  geom_boxplot() +
+  geom_hline(yintercept=mean(boardgames_clean_tbl$average_rating), color="black")+
+  labs(x = "Minimum age", y = "Average Rating") +
+  scale_fill_discrete(name = "Minimum age") +
+  ggtitle("Ratings distribution according to minimum age restriction")
+```
+
+With the boxplot above we can conclude that there is not really a correlation between the minimum age required and the rating of a game.
+
+
+## Traders and wanters
+
+In the bar chart below we present the number of games where their demand is satisfied - *i.e.* there are more traders than wanters - and the number of games where their demand is unsatisfied - *i.e.* there are more wanters than traders.
+
+```{r, echo = F}
+boardgames_clean_tbl %>%
+  mutate(demand_satisfied = (total_traders >= total_wanters)) %>%
+  summarise(satisfied = sum(demand_satisfied), unsatisfied = sum(!demand_satisfied)) -> cnts
+
+data.frame(demand = c("Demand satisfied", "Demand unsatisfied"), count = c(cnts$satisfied, cnts$unsatisfied)) %>%
+  ggplot(aes(x = demand, y = count, fill = demand)) +
+  geom_col() +
+  labs(x = "", y = "Number of games", fill = "") +
+  ggtitle("Satisfied versus unsatisfied game demands")
+```
+
+## Rating distribution
+
+The graph below shows us that ratings follow a gaussian distribution. The vertical black line represents the average of ratings
+
+```{r, echo = F}
+ggplot(boardgames_clean_tbl, aes(x = average_rating)) +
+  geom_vline(xintercept = mean(boardgames_clean_tbl$average_rating), color = "black") +
+  geom_histogram(aes(y = ..density..), binwidth = 0.1, fill = "red", alpha = 0.2, col = "deeppink") +
+  geom_density(color="black") +
+  labs(x = "Games Average Rating", y = "Density") +
+  ggtitle("Ratings distribution")
+```
+
+## Ratings distribution per year since the beginning of the 21st century
+
+The graph below shows the distribution of ratings per year since the beginning of the 21st century. The horizontal black line shows the all time average of those ratings.
+
+```{r, echo = F}
+boardgames_clean_tbl %>%
+  filter(yearpublished >= 2000) %>%
+  mutate(year_discrete=as.factor(yearpublished)) %>%
+  ggplot(aes(year_discrete, average_rating, fill=year_discrete)) +
+  geom_boxplot() +
+  geom_hline(yintercept=mean(boardgames_clean_tbl$average_rating), color="black")+
+  theme (axis.text.x = element_text(angle = 45)) +
+  labs(x = "Year", y = "Average Rating") +
+  ggtitle("Ratings distribution per year since the 21st century")
+```
+
+## Popularity and ratings
+
+In the graph below we observe a positive correlation between the total number of owners and the number of ratings and their influence on the average rating of a game. Hence, one can make the assumption that people in the community tend to prefer high-rated games. It is fair to assume that highly rated games are the most popular thus selling better.
+
+```{r, echo = F, warning = F}
+boardgames_clean_tbl %>%
+  ggplot(aes(average_rating, users_rated)) +
+  geom_point(alpha = 0.5, lwd = 0.5, color="red") +
+  scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x),
+                labels = trans_format("log10", math_format(10^.x)),
+                limits = c(10,10^5)) +
+  labs(x = "Average rating", y = "Number of ratings") -> g1
+
+boardgames_clean_tbl %>%
+  ggplot(aes(average_rating, total_owners)) +
+  geom_point(alpha = 0.5, lwd = 0.5, color="blue") +
+  scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x),
+                labels = trans_format("log10", math_format(10^.x)),
+                limits = c(10,10^5)) +
+  labs(x = "Average rating", y = "Number of owners") -> g2
+
+grid.arrange(g1, g2)
+```
+
+## Game releases over time
+
+The following bar chart and line demonstrate that since 1960 untill 2014 the amount of games released per year kept increasing. However, from 2015 onwards the amount of games released per year fell drastically.
+
+```{r, echo = F}
+boardgames_clean_tbl %>%
+  group_by(yearpublished) %>%
+  summarise(games_published = n()) %>%
+  ggplot(aes(yearpublished, games_published)) +
+  geom_col() +
+  geom_line(color="red") +
+  labs(x = "Year", y = "Games published") +
+  ggtitle("Game releases per year")
+```
+
+## Game ratings since the beginning of the 21st century
+
+The boxplot graph below shows the average ratings of games released since the beginning of the 21st century. The horizontal black line represents the all time ratings average.
+
+We can observe that the average of ratings has been steadily increasing.
+
+```{r, echo = F}
+boardgames_clean_tbl %>%
+  filter(yearpublished >= 2000) %>%
+  mutate(year_discrete=as.factor(yearpublished)) %>%
+  ggplot(aes(year_discrete, average_rating, color=year_discrete)) +
+  geom_boxplot() +
+  geom_hline(yintercept=mean(boardgames_clean_tbl$average_rating), color="black")+
+  labs(x = "Year", y = "Ratings") +
+  theme (axis.text.x = element_text(angle = 90)) +
+  ggtitle("Ratings average per year")
+```
+
+## Complexity of games since the beginning of the 21st century
+
+Game complexity is hard to defined and measure. However, the BoardGames data set has a 'weight' attribute, stored in the columns 'total_weights' and 'average_weight'. It is a score given by users that provides a reduced sense of the complexity of a game, based on their perception.
+
+The boxplot graph below shows the average weight (or complexity) of games released since the beginning of the 21st century. The horizontal black line represents the average of the weights.
+
+We can observe that the complexity of games has been steadily increasing.
+
+```{r, echo = F}
+boardgames_clean_tbl %>%
+  filter(yearpublished >= 2000) %>%
+  mutate(year_discrete=as.factor(yearpublished)) %>%
+  ggplot(aes(year_discrete, average_weight, color=year_discrete)) +
+  geom_boxplot() +
+  geom_hline(yintercept=mean(boardgames_clean_tbl$average_weight), color="black")+
+  labs(x = "Year", y = "Complexity (weights)") +
+  theme (axis.text.x = element_text(angle = 90)) +
+  ggtitle("Complexity throughout the years")
+```
+
+
+## Complexity and rating
+
+The line below shows that higher complexity games usually have an higher rating as well. This does not hold for extremely simple and extremely complex games.
+
+```{r, echo = F}
+boardgames_clean_tbl %>%
+  ggplot(aes(average_weight, average_rating)) +
+  geom_smooth(method = "loess") +
+  labs(x = "Average complexity (weight)", y = "Average rating") +
+  ggtitle("Higher complexity games tend to have higher ratings")
+```
+
+## Game comments and rating
+
+Higher rated games appear to have more comments, hence spiking more engage from the board game community.
+
+```{r, echo = F, message = F}
+boardgames_clean_tbl %>%
+  ggplot(aes(total_comments, average_rating)) +
+  geom_smooth() +
+  labs(x = "Number of comments", y = "Average rating") +
+  ggtitle("Higher rated games tend to have more community feedback (comments)")
+```
+
+Also, as expected, the number of comments follows the number of ratings closely, as most likely each person comments once and rates once.
+
+```{r, echo = F, message = F}
+boardgames_clean_tbl %>%
+  ggplot(aes(total_comments, users_rated)) +
+  geom_smooth() +
+  geom_point(alpha = 0.1, color = "red") +
+  labs(x = "Number of comments", y = "Number of ratings") +
+  ggtitle("Users that comment almost always rate the game")
+```
+
+# Future improvements
+
+A non explored concept was that of bayesian average. Bayesian average was later discovered during this project development's phase. Future exploratory analysis should be made using this feature.
+
+## Average ratings and outliers (few extreme votes)
+
+In the graph below we observe that board games with few votes tend to have overall better ratings.
+A massive amount of points representing ratings are concentrated in the region of few voted games.
+
+```{r, echo = F, warning = F}
+ggplot(boardgames_clean_tbl, aes(users_rated, average_rating)) + 
+  geom_point(alpha = 0.3) +
+  xlim(0, 20000) +
+  labs(x = "Number of user votes", y = "Average rating") + 
+  ggtitle("Games with few votes tend to have extreme ratings")
+```
+
+Even though we filtered games with 10 or less votes, there is a *"smoother"* way of dealing with outliers. That is done using the Bayesian average. In Bayesian statistics we start out with a prior that represents our a *"priori"* assumptions. When evidence comes in we can update this prior, computing a so called posterior that reflects our updated belief. Thus if we have an unrated game we assume its average. If not, the ratings will have to convince us otherwise. As seen below, this removes outliers fairly well.
+
+```{r, echo = F, warning = F}
+gather(boardgames_clean_tbl, n_ratings, rating, average_rating, bayes_average_rating) %>%
+  ggplot(aes(users_rated, rating)) +
+  geom_point(alpha = 0.3) +
+  facet_grid(. ~ n_ratings) +
+  xlim(0, 20000) +
+  labs(x = "Number of user votes", y = "Rating") +
+  ggtitle("Removal of outliers by Bayesian average")
+```
+
+In the graph above we see that higher rated games are better distributed across different number of votes when using the bayesian average rather than the average rating.
+
+## Recent games bias
+
+Newer games tend to have higher ratings, due to their populatiry as seen in the graph below.
+
+```{r, echo = F, message = F}
+boardgames_clean_tbl %>%
+  group_by(yearpublished) %>%
+  summarise(average = mean(average_rating)) %>%
+  ggplot(aes(yearpublished, average)) +
+  geom_point() +
+  geom_smooth() +
+  labs(x = "Publishing year", y = "Average rating") +
+  ggtitle("Recent games have higher ratings")
+```
+
+Using Bayesian average will also prove beneficial here since it also *smooths* the recency effect, as seen below.
+
+```{r, echo = F, message = F, warning = F}
+boardgames_clean_tbl %>%
+  group_by(yearpublished) %>%
+  summarise(average = mean(average_rating),
+            bayes_average = mean(bayes_average_rating)) %>%
+  gather(type, average, average, bayes_average) %>%
+  ggplot(aes(yearpublished, average, bayes_average, color = type)) +
+  xlim(1960, 2015) +
+  geom_point(alpha = 0.3) +
+  geom_smooth() +
+  ggtitle('Moderation of recency effect with bayesian average')
+```

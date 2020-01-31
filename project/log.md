@@ -13,27 +13,27 @@
 
 ### 23rd January
 - Discover correlations between variables
+- Filtering data set
 - Top25 popular games
-- Fixed or variable number of players
-- Fixed and varying duration games
+- Maximum players average per game throughout the years
 
 ### 25th January
+- Fixed and variable number of players
+- Fixed and varying duration games
+- Games for adults (18+ years old)
+- Traders and wanters
 - Rating distribution
-- Rating distribution per year since the beginning of the 21st century
-- Correlation between average rating and game popularity (number of ratings and total owners)
-- Game releases over time
-- Game ratings over time since the beginning of the 21st century
 
 ### 27th January
 - Complexity of games since the beginning of the 21st century
 - Complexity and rating
 - Game comments and rating
-- Maximum players average per game throughout the years
-
+- Rating distribution per year since the beginning of the 21st century
+- Correlation between average rating and game popularity (number of ratings and total owners)
+- Game releases over time
 
 ### 31th January
+- Game ratings over time since the beginning of the 21st century
 - Understand bayes average effect on the "removal" of outliers
-- Apply bayes averaging effect in outlier removal
-- Apply bayes averaging effect in recency smoothening
 - Beautify PDF report, hiding code chunks, ...
 - Submit project
