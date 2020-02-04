@@ -18,17 +18,6 @@ knitr::opts_chunk$set(results = 'hold')
 
 # **MIDEXAM 2019/2020**  
 
-======================================================================================
-
-#### JMBAG: 0036528317         
-#### Name and surname: João Conde 
-#### e-mail: joaodiasconde@gmail.com
-#### IP address: 161.53.78.35
-
-
-======================================================================================
-
-
 #### BASIC INSTRUCTIONS
 
 Below you will find a series of assignments for the final exam. Task options can include **entering a program code** or **pure text** and **executing a program code **. Please follow the instructions below:
@@ -194,7 +183,7 @@ print.default(R.book)
 
 ```{r}
 # loading and exploring the data frame
-points <- read.csv("coursePoints.csv") #no strings so no need for 'stringsAsFactors = F'
+points <- read.csv("data/coursePoints.csv") #no strings so no need for 'stringsAsFactors = F'
 str(points)
 head(points)
 ```
@@ -297,7 +286,7 @@ resultB
 
 **SOLUTION**
 ```{r}
-dirtyIris <- read.csv("dirtyIris.csv")
+dirtyIris <- read.csv("data/dirtyIris.csv")
 str(dirtyIris)
 head(dirtyIris)
 cat("-----------------------------------------------------------------\n")

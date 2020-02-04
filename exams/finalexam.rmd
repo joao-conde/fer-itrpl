@@ -1,0 +1,339 @@
+---
+output:
+  html_document: default
+---
+
+```{r setup, include = F}
+library(caret)
+library(tidyverse)
+library(stringr)
+library(lubridate)
+knitr::opts_chunk$set(results = 'hold')
+```
+
+******************
+
+## INTRODUCTION TO R PROGRAMMING LANGUAGE
+#### **Faculty of Electrical Engineering and Computing, University of Zagreb**
+#### 04/02/2020
+
+******************
+
+# **FINAL EXAM 2019/2020**  
+
+#### BASIC INSTRUCTIONS
+
+Below you will find a series of assignments for the final exam. Task options can include **entering a program code** or **pure text** and **executing a program code **. Please follow the instructions below:
+
+- Before starting to solve the exam press  **Knit to HTML** button to check the validity of the platform and get the exam template in a more readable form in the right-hand pane 
+- unless otherwise stated in an idividual assignment, you can create additional code chunks pressing the **CTRL + ALT + I** button combination or by selecting **Insert -> R**
+- read the text of the assignments carefully
+- the assignment text can also contain program code that you need to modify and update, and execute it according to the instructions given in the assignment text and / or comments of the existing program code
+- If the task solution is a program code that prints something, be sure the notebook includes that print
+- feel free to comment your program code or put additional explanations in text form, if necessary
+
+
+After solving this notebook, select the option **Knit to HTML**, save the result in HTML format and upload it to the **Moodle** pages of this course (NOT DONE FOR THE TEMPLATE!).
+
+while solving this notebook you can use auxiliary resources such as reminders, R documentation, lecture notes, *Google* search engine . **You may not exchange information with other exam participants in any form of communication, including email, social networks, chat programs, or the use of a shared repository.**
+
+By storing a HTML version of the solved noteboook under your username and password, you guarantee that during this exam you have not received nor offered any assistance from or to other students and that you have not been using means of solving the exam which are not explicitly allowed by the courses lecturers. These are acts of violation of the Code of Conduct and may cause further penalties enforced by the Faculty.
+
+**IMPORTANT!!!**
+
+Code chunks that look like this
+
+```{r}
+##########SOLUTION_CHECK###################
+# some code
+###########################################
+```
+
+are for solution checking and the code inside **must not be changed**. If you are unable to solve the assignment and the solution check code chunk is stopping you from knitting the document to HTML, simply add `eval = F` in the chunk header. 
+
+
+
+
+
+=================================================================================
+
+## ASSIGNMENTS
+
+All assignments will refer to data from files `animals.csv` and `airQuality.csv`. Before loading that data into data frames read the following short documentation about then.
+
+```{r}
+# Animals
+
+# all attributes Boolean and self-explanatory, except 
+#             name (unique character)
+#             legs (numeric)
+#             type (explained below)
+# Type: 1 - mammal, 2 - bird, 3 - reptile, 4 - fish, 
+#       5 - amphibian, 6 - insect, 7 - crustacean
+
+
+# Air Quality
+
+# Column description:
+# 1 Date (DD/MM/YYYY)
+# 2 Time (HH.MM.SS)
+# 3 CO concentration, true hourly averaged, mg/m^3 
+# 4 Tin Oxide, hourly averaged sensor response 
+# 5 Benzene concentration, true hourly averaged, microg/m^3 
+# 6 Titanium, hourly averaged sensor response 
+# 7 NO2 concentration, true hourly averaged, microg/m^3 
+# 8 Tungsten Oxide, hourly averaged sensor response (
+# 9 Indium Oxide, hourly averaged sensor response  targeted)
+# 10 Temperature in °C
+# 11 Relative Humidity (%)
+# 12 Absolute Humidity 
+```
+
+
+Load the data and briefly explore it. 
+
+```{r}
+# loading data
+animals <- read.csv("data/animals.csv", stringsAsFactors = F)
+airq <- read.csv("data/airQuality.csv", stringsAsFactors = F)
+# (optional) head, glimpse, summary
+glimpse(animals)
+summary(animals)
+head(animals)
+
+glimpse(airq)
+summary(airq)
+head(airq)
+```
+
+## Data preparation
+
+*In assignments 1. and 2. follow the instructions to prepare the data accordingly. All changes need to be store in the original data frames (`animals` / `airq`).*
+
+**1. (2 points)** In data frame `animals` factorize columns `legs` and `type`. Column `legs` needs to be an **ordered factor**, while column `type` needs to have the numbers changed with the appropriate type names by using information from the short documentation above.
+
+**SOLUTION**
+
+```{r}
+## YOUR SOLUTION HERE
+animals$legs <- factor(animals$legs, order = TRUE)
+
+# types
+types <- c("mammal", "bird", "reptile", "fish", "amphibian", "insect", "crustacean") 
+animals <- mutate(animals, type = types[type])
+animals$type <- as.factor(animals$type)
+```
+
+
+*****************************************
+```{r}
+##########SOLUTION_CHECK###################
+select(animals, legs, type) %>% head
+###########################################
+```
+
+*****************************************
+
+**2. (4 points)**  Make the following changes to the data frame `airq`:
+
+a) Replace columns `Date` and `Time` with a column called `Timestamp` which will contain a timestamp of the observation in the `POSIXct` format, timezone `UTC`. Final data frame needs to have 11 columns and the first column should be `Timestamp`.
+
+
+**SOLUTION**
+
+```{r}
+## YOUR SOLUTION HERE
+airq <- mutate(airq, Timestamp = as.POSIXct(paste(Date, " ", Time), tz="UTC", format="%d/%m/%Y %H.%M.%S"))
+airq <- select(airq, Timestamp, everything())
+airq$Time <- NULL
+airq$Date <- NULL
+```
+
+
+*****************************************
+```{r}
+##########SOLUTION_CHECK###################
+names(airq)
+airq$Timestamp %>% class
+head(airq$Timestamp)
+###########################################
+```
+
+*****************************************
+
+
+b) In the `airq` data frame the value `-200` in the numerical columns is a stand-in for "data unavailable". Replace all such `-200` values with a more appropriate `NA` value.
+
+**SOLUTION**
+
+```{r}
+## YOUR SOLUTION HERE
+for(col in names(airq))
+  airq[col] <- with(airq, replace(airq[col], airq[col] == -200, NA))
+```
+
+
+*****************************************
+```{r}
+##########SOLUTION_CHECK###################
+summary(select(airq, 3, 5, 11))
+###########################################
+```
+
+*****************************************
+
+## Data management
+
+**3. (4 points)** Next assignments are related to the  `animals` data frame:
+
+a) Print out the name and type of all animals that are venomous and aren't aquatic.
+
+**SOLUTION**
+
+```{r}
+## YOUR SOLUTION HERE
+animals %>% filter(venomous & !aquatic) %>% select(name, type)
+```
+
+b) For a subset of animals which have a tail print out type and average leg count for that type (`avgLegCount`).
+
+*NOTE* - to avoid `NA` values in your results, temporarily convert the factorized `legs` column into a numeric one.
+
+**SOLUTION**
+
+*****************************************
+```{r}
+## YOUR SOLUTION HERE
+animals %>% filter(tail) %>% group_by(type) %>% summarise(avgLegCount = sum(as.numeric(legs)) / n())
+```
+
+*****************************************
+
+**4. (4 points)**  Next assignments are related to the  `airq` data frame:
+
+a) For random 10 observations measured in a month of June while the relative humidity was strictly over 60%, print the timestamp of that observation, temperature and concentrations of CO and NO2.
+
+**SOLUTION**
+
+*****************************************
+```{r}
+set.seed(1234)  # do not change!
+## YOUR SOLUTION HERE
+airq %>% filter(month(Timestamp) == 6, RelativeHumidity > 60.0) %>% sample_n(10) %>% select(Timestamp, Temperature, CO, NO2)
+```
+
+*****************************************
+
+b) Add a column called `healthHazardLevel` to the `airq` data frame which will contain information about how many sensors that measure `TinOxide`, `TungstenOxide` and `IndiumOxide` went over `1000` for that particular observation (example: if one observation has `TinOxide` of value `900`, `TungstenOxide` of `1300` and `IndiumOxide` of `1050`, then `healthHazardLevel` needs to have a value of `2`)
+
+**SOLUTION:**
+
+```{r}
+## YOUR SOLUTION HERE
+airq <- mutate(airq, healthHazardLevel = sum(TinOxide > 1000, TungstenOxide > 1000, IndiumOxide > 1000, na.rm = T))
+```
+
+
+*****************************************
+```{r}
+##########SOLUTION_CHECK###################
+summary(airq$healthHazardLevel, na.rm = T)
+###########################################
+```
+*****************************************
+
+
+## Visualization
+
+
+**5. (2 points)**  Using the `animals` data frame create a bar chart which shows how many animals of each type are in the data frame. Fill the bars with color which will be related to the number of legs of animals of that type.
+
+
+**SOLUTION:**
+
+*****************************************
+```{r}
+## YOUR SOLUTION HERE
+ggplot(animals, aes(x=type, fill = legs)) +
+  geom_bar()
+```
+
+*****************************************
+
+**6. (3 points)**  Using the `airq` data frame create a graph which will show a probability density function for the `NO2` variable for each month of the year. Subgraphs need to be organized in a 3 x 4 matrix. Before drawing these graphs temporarily remove all rows with `NA` values.
+
+
+**SOLUTION:**
+
+*****************************************
+```{r}
+## YOUR SOLUTION HERE
+na.omit(airq) %>%
+  mutate(Month = month(Timestamp)) %>%
+  ggplot(aes(x=NO2)) +
+  geom_density(position = 'dodge') +
+  facet_wrap(~ Month)
+```
+*****************************************
+
+## Linear regression
+
+**7. (6 points)**  Train a linear regression model by following these steps:
+
+a) Remove all rows from `airq` where either `CO` or `Benzene` have a value of `NA`.
+
+**SOLUTION:**
+```{r}
+## YOUR SOLUTION HERE
+airq <- filter(airq, !is.na(CO) & !is.na(Benzene))
+```
+
+
+*****************************************
+```{r}
+##########SOLUTION_CHECK###################
+summary(select(airq, CO, Benzene))
+###########################################
+```
+*****************************************
+
+
+
+b) Split the data frame into a training and test data frames (`airqTrain` and `airqTest`). Training set needs to contain 80% randomly chosen observations.
+
+**SOLUTION:**
+```{r}
+set.seed(1234) # do not change!
+## YOUR SOLUTION HERE
+train_ind <- sample(1:nrow(airq), 0.8 * nrow(airq) %>% round)
+airqTrain <- airq[train_ind, ]
+airqTest <- airq[-train_ind, ]
+```
+
+*****************************************
+```{r}
+##########SOLUTION_CHECK###################
+dim(airqTrain)
+summary(airqTest$CO)
+###########################################
+```
+*****************************************
+
+c) Train a linear regression model over `airqTrain` which will try to guess the CO level based on the level of Benzene, temperature and relative humidity. Print out a summary of that model (`summary`). Then print the value of *MAE* (*mean average error*) calculated over the training and then the test data set.
+
+*****************************************
+**SOLUTION:**
+```{r}
+## YOUR SOLUTION HERE
+linMod <- lm(CO ~ Benzene + Temperature + RelativeHumidity, data = airqTrain)
+summary(linMod)
+mae <- function(pred, act) mean(abs(pred - act))
+
+airqTrain$predCO <- predict(linMod, airqTrain)
+airqTest$predCO <- predict(linMod, airqTest)
+
+mae(airqTrain$predCO, airqTrain$CO)
+mae(airqTest$predCO, airqTest$CO)
+```
+
+*****************************************
